@@ -12,6 +12,10 @@ A Horizon-native port of Legacy4J, with GUI parity as the first milestone.
   only Legacy4J screens that define a panel receive one.
 - Implements the title, Play Game, Leaderboards, Help & Options, Controls,
   Settings, Store, Change Skin, Credits and Exit-confirmation menu hierarchy.
+- Play Game now uses Legacy4J's 300-pixel-wide panel, recessed list area and
+  joined Load/Create/Join tabs, with pointer and keyboard tab navigation.
+  Its world list and row actions still require upstream title-state APIs;
+  Create/Join rows are disabled scaffolding.
 - Implements the title-side Mouse Settings, Key Binds, Controller, Game
   Options, Audio, Graphics, User Interface, Reset Settings and store-category
   pages, including their scrolling and parent navigation.

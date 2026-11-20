@@ -16,6 +16,8 @@ use serde_json::Value;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+mod play_menu;
+
 const TITLE_SCREEN: &str = "title";
 const LOADING_ENTER_NETHER: &str = "legacy:loading/enter_nether";
 const LOADING_ENTER_END: &str = "legacy:loading/enter_end";
@@ -346,6 +348,7 @@ pub struct LegacyHorizon {
     crafting_scroll: AtomicUsize,
     crafting_request: AtomicUsize,
     crafting_status: AtomicUsize,
+    play_tab: AtomicUsize,
 }
 
 fn menu_button_rects<const N: usize>(size: [f32; 2]) -> [[f32; 4]; N] {
@@ -1097,6 +1100,7 @@ fn draw_page(
     how_to_play_section: usize,
     article_scroll: usize,
     store_category: usize,
+    play_tab: usize,
 ) {
     match page {
         PAGE_HELP_AND_OPTIONS => draw_menu(
@@ -1126,15 +1130,7 @@ fn draw_page(
             false,
             None,
         ),
-        PAGE_PLAY_GAME => draw_menu(
-            host,
-            event,
-            &PLAY_GAME_TABS,
-            &PLAY_GAME_KEYS,
-            keyboard_focus,
-            false,
-            Some(("legacy.menu.play_game", "Play Game")),
-        ),
+        PAGE_PLAY_GAME => play_menu::draw(host, event, play_tab),
         PAGE_LEADERBOARDS => draw_panel_message(
             event,
             "Leaderboards",
@@ -1447,6 +1443,7 @@ impl Hooks for LegacyHorizon {
                 self.how_to_play_section.load(Ordering::Relaxed),
                 self.article_scroll.load(Ordering::Relaxed),
                 self.store_category.load(Ordering::Relaxed),
+                self.play_tab.load(Ordering::Relaxed),
             );
         } else if event.screen.id == "inventory"
             && (event.screen.menu == Some("minecraft:crafting")
@@ -1516,6 +1513,22 @@ impl Hooks for LegacyHorizon {
         let size = [event.screen.rect[2], event.screen.rect[3]];
         let page = self.page.load(Ordering::Relaxed);
         let focus = self.keyboard_focus.load(Ordering::Relaxed);
+        if page == PAGE_PLAY_GAME {
+            if contains([12.0, size[1] - 27.0, 86.0, 24.0], event.screen.mouse) {
+                self.page.store(PAGE_TITLE, Ordering::Relaxed);
+                self.keyboard_focus.store(0, Ordering::Relaxed);
+                play_button_sound(host);
+                return Flow::Cancel;
+            }
+            for tab in 0..3 {
+                if contains(play_menu::tab_rect(size, tab), event.screen.mouse) {
+                    self.play_tab.store(tab, Ordering::Relaxed);
+                    play_button_sound(host);
+                    return Flow::Cancel;
+                }
+            }
+            return Flow::Cancel;
+        }
         let (start, visible_count) = visible_button_window(page, focus);
         let clicked = (0..visible_count).position(|visible_index| {
             let rect = if page == PAGE_TITLE {
@@ -1667,6 +1680,25 @@ impl Hooks for LegacyHorizon {
         }
         let page = self.page.load(Ordering::Relaxed);
         let count = page_button_count(page);
+        if page == PAGE_PLAY_GAME {
+            let tab = self.play_tab.load(Ordering::Relaxed).min(2);
+            match event.key {
+                "key.keyboard.left" | "key.keyboard.left.bracket" => {
+                    self.play_tab.store((tab + 2) % 3, Ordering::Relaxed);
+                }
+                "key.keyboard.right" | "key.keyboard.right.bracket" | "key.keyboard.tab" => {
+                    self.play_tab.store((tab + 1) % 3, Ordering::Relaxed);
+                }
+                "key.keyboard.escape" => {
+                    self.page.store(PAGE_TITLE, Ordering::Relaxed);
+                    self.keyboard_focus.store(0, Ordering::Relaxed);
+                    return Flow::Cancel;
+                }
+                _ => return Flow::Cancel,
+            }
+            play_button_sound(host);
+            return Flow::Cancel;
+        }
         if count == 0 {
             if page == PAGE_HOW_TO_PLAY_ARTICLE {
                 let section = self.how_to_play_section.load(Ordering::Relaxed);

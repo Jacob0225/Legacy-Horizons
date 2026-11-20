@@ -30,8 +30,9 @@ account data, game files, local worlds, tokens, or machine-specific settings.
   the tested build and needs diagnosis. Category icons are visual scaffolding.
 - Exact Legacy crafting slot placement remains blocked by the slot-layout API
   request documented in `github issues/07-vanilla-container-slot-layout.md`.
-- Latest source passes 10 local tests and builds as a native mod. The final
-  logging-only build has not been launched yet.
+- Latest source passes 11 local tests. The tabbed Play Game slice builds as a
+  native mod; its latest visual check is pending because the launcher stalled
+  at sign-in/asset checks. Exact visual parity has not been verified.
 
 ## Visual references
 
