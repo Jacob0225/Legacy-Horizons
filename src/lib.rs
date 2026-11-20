@@ -16,7 +16,14 @@ use serde_json::Value;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+mod credits;
 mod play_menu;
+
+fn now_millis() -> usize {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_or(0, |duration| duration.as_millis() as usize)
+}
 
 const TITLE_SCREEN: &str = "title";
 const LOADING_ENTER_NETHER: &str = "legacy:loading/enter_nether";
@@ -335,6 +342,7 @@ const PAGE_GRAPHICS: usize = 17;
 const PAGE_USER_INTERFACE: usize = 18;
 const PAGE_RESET_SETTINGS: usize = 19;
 const PAGE_STORE_CATEGORY: usize = 20;
+const PAGE_CREDITS_ROLL: usize = 21;
 
 #[derive(Default)]
 pub struct LegacyHorizon {
@@ -349,6 +357,8 @@ pub struct LegacyHorizon {
     crafting_status: AtomicUsize,
     crafting_category: AtomicUsize,
     play_tab: AtomicUsize,
+    credits_started: AtomicUsize,
+    credits_clock: std::sync::Mutex<credits::RollClock>,
 }
 
 fn menu_button_rects<const N: usize>(size: [f32; 2]) -> [[f32; 4]; N] {
@@ -633,14 +643,6 @@ fn draw_how_to_play_index(
     draw_legacy_panorama(event, size);
     let (start, count) = list_window(keyboard_focus, HOW_TO_PLAY_SECTIONS.len());
     let panel = how_to_play_panel_rect(size, count);
-    play_menu::bevel(event.draw, panel, false);
-    event
-        .draw
-        .fill([panel[0], panel[1], panel[2], 1.0], 0xFF70_7070);
-    event.draw.fill(
-        [panel[0], panel[1] + panel[3] - 1.0, panel[2], 1.0],
-        0xFF30_3030,
-    );
     let title = translated_label(host, "legacy.menu.how_to_play", "How To Play");
     let title_width = event.draw.text_width(&title);
     event.draw.text(
@@ -1148,7 +1150,6 @@ fn draw_how_to_play_article(
     draw_legacy_panorama(event, [width, height]);
     let section = section.min(HOW_TO_PLAY_SECTIONS.len() - 1);
     let rect = [28.0, 92.0, width - 56.0, height - 122.0];
-    play_menu::bevel(event.draw, rect, false);
     let title = translated_label(
         host,
         HOW_TO_PLAY_KEYS[section],
@@ -1173,8 +1174,8 @@ fn draw_how_to_play_article(
         event.draw.text(
             line,
             [rect[0] + 12.0, rect[1] + 10.0 + row as f32 * 10.0],
-            0xFF48_4848,
-            false,
+            0xFFFF_FFFF,
+            true,
         );
     }
     let arrow_y = rect[1] + rect[3] + 3.0;
@@ -1289,10 +1290,7 @@ fn draw_page(
             &CREDITS_KEYS,
             keyboard_focus,
             false,
-            Some((
-                "credits_and_attribution.screen.title",
-                "Credits & Attribution",
-            )),
+            None,
         ),
         PAGE_EXIT | PAGE_RESET_SETTINGS => {
             draw_confirmation(host, event, page == PAGE_RESET_SETTINGS, keyboard_focus)
@@ -1330,7 +1328,7 @@ fn page_button_count(page: usize) -> usize {
         PAGE_STORE => STORE_BUTTONS.len(),
         PAGE_CHANGE_SKIN => CHANGE_SKIN_BUTTONS.len(),
         PAGE_HOW_TO_PLAY => HOW_TO_PLAY_SECTIONS.len(),
-        PAGE_HOW_TO_PLAY_ARTICLE | PAGE_LEADERBOARDS => 0,
+        PAGE_HOW_TO_PLAY_ARTICLE | PAGE_LEADERBOARDS | PAGE_CREDITS_ROLL => 0,
         PAGE_CREDITS => CREDITS_BUTTONS.len(),
         PAGE_EXIT => EXIT_BUTTONS.len(),
         PAGE_RESET_SETTINGS => RESET_SETTINGS_BUTTONS.len(),
@@ -1354,6 +1352,7 @@ fn parent_page(page: usize) -> Option<(usize, usize)> {
         PAGE_HOW_TO_PLAY => Some((PAGE_HELP_AND_OPTIONS, 1)),
         PAGE_HOW_TO_PLAY_ARTICLE => Some((PAGE_HOW_TO_PLAY, 0)),
         PAGE_CREDITS => Some((PAGE_HELP_AND_OPTIONS, 4)),
+        PAGE_CREDITS_ROLL => Some((PAGE_CREDITS, 0)),
         PAGE_EXIT => Some((PAGE_TITLE, 4)),
         PAGE_MOUSE_SETTINGS => Some((PAGE_CONTROLS, 0)),
         PAGE_KEY_BINDS => Some((PAGE_CONTROLS, 1)),
@@ -1380,6 +1379,7 @@ fn child_page(page: usize, index: usize) -> Option<usize> {
         (PAGE_HELP_AND_OPTIONS, 2) => Some(PAGE_CONTROLS),
         (PAGE_HELP_AND_OPTIONS, 3) => Some(PAGE_SETTINGS),
         (PAGE_HELP_AND_OPTIONS, 4) => Some(PAGE_CREDITS),
+        (PAGE_CREDITS, 0) => Some(PAGE_CREDITS_ROLL),
         (PAGE_CONTROLS, 0) => Some(PAGE_MOUSE_SETTINGS),
         (PAGE_CONTROLS, 1) => Some(PAGE_KEY_BINDS),
         (PAGE_CONTROLS, 2) => Some(PAGE_CONTROLLER),
@@ -1546,25 +1546,32 @@ impl Hooks for LegacyHorizon {
 
     fn screen_render_post(&self, host: &dyn ClientHost, event: &mut ScreenRenderPostEvent<'_>) {
         if event.screen.id == TITLE_SCREEN {
-            draw_page(
-                host,
-                event,
-                self.page.load(Ordering::Relaxed),
-                self.keyboard_focus.load(Ordering::Relaxed),
-                self.how_to_play_section.load(Ordering::Relaxed),
-                self.article_scroll.load(Ordering::Relaxed),
-                self.store_category.load(Ordering::Relaxed),
-                self.play_tab.load(Ordering::Relaxed),
-            );
+            if self.page.load(Ordering::Relaxed) == PAGE_CREDITS_ROLL {
+                credits::draw(
+                    host,
+                    event,
+                    self.credits_started.load(Ordering::Relaxed),
+                    &self.credits_clock,
+                );
+            } else {
+                draw_page(
+                    host,
+                    event,
+                    self.page.load(Ordering::Relaxed),
+                    self.keyboard_focus.load(Ordering::Relaxed),
+                    self.how_to_play_section.load(Ordering::Relaxed),
+                    self.article_scroll.load(Ordering::Relaxed),
+                    self.store_category.load(Ordering::Relaxed),
+                    self.play_tab.load(Ordering::Relaxed),
+                );
+            }
             if self.page.load(Ordering::Relaxed) != PAGE_TITLE {
                 let size = event.draw.size();
                 event
                     .draw
                     .text("< Back", [16.0, size[1] - 18.0], 0xFFFF_FFFF, true);
             }
-        } else if event.screen.id == "inventory"
-            && (event.screen.menu == Some("minecraft:crafting")
-                || (event.screen.menu.is_none() && event.screen.slots >= 45))
+        } else if event.screen.id == "inventory" && event.screen.menu == Some("minecraft:crafting")
         {
             draw_crafting_menu(
                 host,
@@ -1585,10 +1592,7 @@ impl Hooks for LegacyHorizon {
         if event.button != 0 {
             return Flow::Continue;
         }
-        if event.screen.id == "inventory"
-            && (event.screen.menu == Some("minecraft:crafting")
-                || (event.screen.menu.is_none() && event.screen.slots >= 45))
-        {
+        if event.screen.id == "inventory" && event.screen.menu == Some("minecraft:crafting") {
             if !crafting_browser_fits(event.screen.rect[0]) {
                 return Flow::Continue;
             }
@@ -1699,6 +1703,9 @@ impl Hooks for LegacyHorizon {
                 self.store_category.store(index, Ordering::Relaxed);
             }
             if let Some(child) = child_page(page, index) {
+                if child == PAGE_CREDITS_ROLL {
+                    self.credits_started.store(now_millis(), Ordering::Relaxed);
+                }
                 self.page.store(child, Ordering::Relaxed);
                 self.keyboard_focus.store(
                     if page == PAGE_EXIT && index == 0 {
@@ -1726,10 +1733,7 @@ impl Hooks for LegacyHorizon {
         if event.scroll[1] == 0.0 {
             return Flow::Continue;
         }
-        if event.screen.id == "inventory"
-            && (event.screen.menu == Some("minecraft:crafting")
-                || (event.screen.menu.is_none() && event.screen.slots >= 45))
-        {
+        if event.screen.id == "inventory" && event.screen.menu == Some("minecraft:crafting") {
             let count = host
                 .recipes_of_type("minecraft:crafting")
                 .iter()
@@ -1798,10 +1802,7 @@ impl Hooks for LegacyHorizon {
         if event.repeat {
             return Flow::Continue;
         }
-        if event.screen.id == "inventory"
-            && (event.screen.menu == Some("minecraft:crafting")
-                || (event.screen.menu.is_none() && event.screen.slots >= 45))
-        {
+        if event.screen.id == "inventory" && event.screen.menu == Some("minecraft:crafting") {
             let count = host
                 .recipes_of_type("minecraft:crafting")
                 .iter()
@@ -1925,6 +1926,9 @@ impl Hooks for LegacyHorizon {
                     self.article_scroll.store(0, Ordering::Relaxed);
                 }
                 child_page(page, current).map(|child| {
+                    if child == PAGE_CREDITS_ROLL {
+                        self.credits_started.store(now_millis(), Ordering::Relaxed);
+                    }
                     play_button_sound(host);
                     self.page.store(child, Ordering::Relaxed);
                     if page == PAGE_EXIT && current == 0 {

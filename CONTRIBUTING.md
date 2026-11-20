@@ -32,11 +32,18 @@ account data, game files, local worlds, tokens, or machine-specific settings.
   beside stock slots at every GUI scale; it explicitly reports this limitation.
 - Exact Legacy crafting slot placement remains blocked by the slot-layout API
   request documented in `github issues/07-vanilla-container-slot-layout.md`.
-- Latest source passes 11 local tests and builds as a native mod. Live MCP
+- Latest source passes 12 local tests and builds as a native mod. Live MCP
   screenshots of the light help panel, Play Game tabs and category-filtered
   crafting browser are included as `gui-*-progress.png`. Exact visual parity
   has not been achieved: bundled artwork, slot layout and title actions still
   have the upstream API limitations described in the issue reports.
+
+Recent research used Legacy4J's HelpAndOptionsScreen, LegacyCreditsScreen and
+WinScreenMixin, plus NeoLegacy's UIScene_Credits as a visual/behavior cross-check.
+No NeoLegacy code or assets were copied into this repository. Credits uses
+the packaged Legacy4J credits JSON and the player's active Minecraft resources.
+Credits artwork is blocked by issue 1. Table recipe placement's exact observed
+refusal is documented in issue 14 (#18799); it is not reported as functional.
 
 ## Visual references
 

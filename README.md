@@ -22,6 +22,8 @@ A Horizon-native port of Legacy4J, with GUI parity as the first milestone.
 - Implements the valid 43-entry How To Play index. Its articles are read from
   Legacy4J's original UI-definition JSON, translated through Horizon's active
   language resources, formatting-cleaned, wrapped and scrollable.
+- How To Play's list and article reader have no backing panel: their spaces
+  stay clear over the panorama, as requested by the project owner.
 - Uses Legacy4J's translation keys for the title hierarchy and every How To
   Play title, with explicit Legacy wording where the original relies on the
   separately enabled Legacy Resources pack.
@@ -31,8 +33,8 @@ A Horizon-native port of Legacy4J, with GUI parity as the first milestone.
 - Replaces Nether/End travel and same-dimension respawn transitions with
   Legacy4J's translated entering/leaving/respawning header geometry and
   animated eight-block loading indicator.
-- Adds a live crafting recipe browser beside the survival inventory and
-  crafting-table screens. It reads Horizon's current crafting recipes, draws
+- Adds a live crafting recipe browser only beside crafting-table screens.
+  Personal inventory crafting remains unchanged. It reads Horizon's current crafting recipes, draws
   their real result and ingredient items, supports pointer, wheel and keyboard
   selection. Recipe placement is wired to the public recipe API, but the tested
   crafting-table call was refused; placement remains incomplete pending diagnosis.
@@ -42,6 +44,11 @@ A Horizon-native port of Legacy4J, with GUI parity as the first milestone.
   show translated confirmation messages with unavailable actions disabled.
 - The side browser requires 164 GUI pixels to the left of the stock inventory;
   at larger GUI scales it shows a visible scale hint instead of covering slots.
+- Ports the Legacy credits roll from the original credits JSON: combined
+  resource credits, 18-pixel line spacing, enlarged section headings, yellow
+  names, accelerated scrolling and looping. The original background and fade
+  sprites are attempted; issue 1 still prevents their display in the pinned
+  nightly, so its black fallback is not artwork parity.
 - Targets the installed Nov 18 Horizon nightly at `0b14f8a` and its matching
   horizon-mixins revision.
 
@@ -64,6 +71,8 @@ The exact public-API boundaries are documented as ready-to-post reports in
 12. distinguishing respawn from login/other dimension transitions.
 13. reading Horizon's active, resource-pack-aware title splash from a
     replacement title renderer.
+14. native client-tick recipe placement refusing an open crafting table:
+    [#18799](https://github.com/horizon-rust/horizon/issues/18799).
 
 Issues 1-12 were posted by the project owner. Issue 13 was checked for an
 existing report and posted with GitHub CLI as
