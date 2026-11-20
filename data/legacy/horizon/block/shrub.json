@@ -1,0 +1,21 @@
+{
+  "collision_shapes": {
+    "default": []
+  },
+  "properties": {
+    "occludes": false
+  },
+  "shapes": {
+    "default": [
+      [
+        0.05,
+        0.0,
+        0.05,
+        0.95,
+        1.0,
+        0.95
+      ]
+    ]
+  },
+  "template": "minecraft:stone"
+}

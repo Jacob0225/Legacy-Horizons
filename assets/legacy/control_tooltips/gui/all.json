@@ -1,0 +1,29 @@
+[
+  {
+    "keyMapping": "key.jump",
+    "action": "jump"
+  },
+  {
+    "keyMapping": "legacy.key.inventory",
+    "action": "inventory"
+  },
+  {
+    "keyMapping": "legacy.key.crafting"
+  },
+  {
+    "keyMapping": "key.use",
+    "action": "use"
+  },
+  {
+    "keyMapping": "key.attack",
+    "action": "hit"
+  },
+  {
+    "keyMapping": "key.sneak",
+    "action": "shift"
+  },
+  {
+    "keyMapping": "key.pickItem",
+    "action": "pick"
+  }
+]

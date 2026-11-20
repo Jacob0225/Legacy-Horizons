@@ -1,0 +1,17 @@
+[package]
+name = "legacy-horizon"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Legacy4J's Legacy Console Edition interface, ported to Horizon."
+
+[lib]
+name = "legacy_horizon"
+path = "src/lib.rs"
+
+[dependencies]
+# `cargo horizon-mod` fetches the SDK selected by horizon-mod.toml here. The
+# launcher recognizes only this pinned SDK path for a distributable native mod.
+horizon-mod-api = { path = ".horizon/sdk/api/crates/horizon-mod-api" }
+serde_json = "=1.0.151"
+
