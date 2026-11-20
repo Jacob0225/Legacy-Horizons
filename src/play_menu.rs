@@ -16,7 +16,7 @@ pub(super) fn tab_rect(size: [f32; 2], tab: usize) -> [f32; 4] {
     [panel[0] + tab as f32 * 100.0, panel[1] - 25.0, 100.0, 31.0]
 }
 
-fn bevel(draw: &mut dyn DrawContext, rect: [f32; 4], recessed: bool) {
+pub(super) fn bevel(draw: &mut dyn DrawContext, rect: [f32; 4], recessed: bool) {
     let [x, y, w, h] = rect;
     draw.fill([x - 1.0, y - 1.0, w + 2.0, h + 2.0], 0xFF10_1010);
     draw.fill(rect, if recessed { 0xFF9D_9D9D } else { 0xFFD0_D0D0 });

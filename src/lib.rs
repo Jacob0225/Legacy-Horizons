@@ -590,7 +590,7 @@ fn draw_menu(
             BUTTON_WIDTH + 16.0,
             labels.len() as f32 * (BUTTON_HEIGHT + BUTTON_GAP) + 24.0,
         ];
-        event.draw.fill(panel, 0xD010_1010);
+        play_menu::bevel(event.draw, panel, false);
         event
             .draw
             .fill([panel[0], panel[1], panel[2], 1.0], 0xFF70_7070);
@@ -633,7 +633,7 @@ fn draw_how_to_play_index(
     draw_legacy_panorama(event, size);
     let (start, count) = list_window(keyboard_focus, HOW_TO_PLAY_SECTIONS.len());
     let panel = how_to_play_panel_rect(size, count);
-    event.draw.fill(panel, 0xD010_1010);
+    play_menu::bevel(event.draw, panel, false);
     event
         .draw
         .fill([panel[0], panel[1], panel[2], 1.0], 0xFF70_7070);
@@ -701,7 +701,7 @@ fn draw_option_page(
     let size = event.draw.size();
     draw_legacy_panorama(event, size);
     let panel = option_panel_rect(size);
-    event.draw.fill(panel, 0xE010_1010);
+    play_menu::bevel(event.draw, panel, false);
     event
         .draw
         .fill([panel[0], panel[1], panel[2], 1.0], 0xFF70_7070);
@@ -778,7 +778,7 @@ fn draw_crafting_menu(
     };
     let panel = [panel_x, ((height - 215.0) / 2.0).floor(), 154.0, 215.0];
     let _ = host.apply_screen_blur();
-    event.draw.fill(panel, 0xF010_1010);
+    play_menu::bevel(event.draw, panel, false);
     event
         .draw
         .fill([panel[0], panel[1], panel[2], 1.0], 0xFF70_7070);
@@ -860,7 +860,7 @@ fn draw_crafting_menu(
     );
     event.draw.fill(
         [panel[0] + 8.0, panel[1] + 115.0, panel[2] - 16.0, 91.0],
-        0xA000_0000,
+        0xFFB0_B0B0,
     );
     for (index, ingredient) in recipe.ingredients.iter().take(9).enumerate() {
         let x = panel[0] + 17.0 + (index % 3) as f32 * 24.0;
@@ -911,7 +911,7 @@ fn draw_panel_message(event: &mut ScreenRenderPostEvent<'_>, title: &str, messag
     let [width, height] = event.draw.size();
     draw_legacy_panorama(event, [width, height]);
     let rect = [28.0, 92.0, width - 56.0, height - 122.0];
-    event.draw.fill(rect, 0xCC10_1010);
+    play_menu::bevel(event.draw, rect, false);
     let title_width = event.draw.text_width(title);
     event.draw.text(
         title,
@@ -922,7 +922,7 @@ fn draw_panel_message(event: &mut ScreenRenderPostEvent<'_>, title: &str, messag
     event.draw.text(
         message,
         [rect[0] + 12.0, rect[1] + 12.0],
-        0xFFB0_B0B0,
+        0xFF48_4848,
         false,
     );
 }
@@ -1024,7 +1024,7 @@ fn draw_how_to_play_article(
     draw_legacy_panorama(event, [width, height]);
     let section = section.min(HOW_TO_PLAY_SECTIONS.len() - 1);
     let rect = [28.0, 92.0, width - 56.0, height - 122.0];
-    event.draw.fill(rect, 0xE010_1010);
+    play_menu::bevel(event.draw, rect, false);
     let title = translated_label(
         host,
         HOW_TO_PLAY_KEYS[section],
@@ -1049,7 +1049,7 @@ fn draw_how_to_play_article(
         event.draw.text(
             line,
             [rect[0] + 12.0, rect[1] + 10.0 + row as f32 * 10.0],
-            0xFFFF_FFFF,
+            0xFF48_4848,
             false,
         );
     }
