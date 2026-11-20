@@ -5,6 +5,21 @@ Gameplay/census validation build: `native-0b14f8a-b13f98955780`.
 Native settings adapter validation build: `native-0b14f8a-21f10fddf2f7`.
 Final formatting-only package build: `native-0b14f8a-70df1564f13c` (passed).
 
+## Clear button-list backgrounds
+
+The owner's follow-up explicitly requires transparent surroundings for
+button-list menus. Removed the light backing card and its borders from the
+shared option-page drawing and the titled button-list drawing. Settings and
+skin-option buttons now sit directly over the panorama, with the same button
+rectangles, focus treatment and input handling. How To Play remains clear.
+
+Native build `native-0b14f8a-ff73d7b68191` passed. Horizon MCP inspected Game
+Options widgets and captured the Game Options and Change Skin pages at
+1280×720 (GUI 640×360). Evidence: `gui-game-options-clear.png` and
+`gui-skin-options-clear.png`. These supersede the older panel-backed captures
+as the intended background treatment. The skin screen's existing static
+scaffolding is not made functional by this paint change.
+
 ## Requested features
 
 | Feature | Runnable status | Remaining work |

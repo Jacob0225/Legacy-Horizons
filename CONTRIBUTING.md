@@ -3,6 +3,12 @@
 This repository contains the actual Horizon port at its root. It is an early
 GUI parity implementation, not a complete playable replacement for Legacy4J.
 
+Start with [AGENT-README.md](AGENT-README.md) for the owner's requirements and
+the end-to-end workflow. The [issues README](github%20issues/README.md) records
+report formatting and existing upstream reports; `CLAUDE.md` points Claude to
+the same instructions. Button-list menus must remain clear over the panorama,
+without white/gray cards, borders or dark group backings.
+
 ## Build
 
 Use Horizon's native mod tooling to provision the SDK selected by

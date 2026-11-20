@@ -2,6 +2,24 @@
 
 A Horizon-native port of Legacy4J, with GUI parity as the first milestone.
 
+## For Claude and other contributors
+
+Read [AGENT-README.md](AGENT-README.md) before continuing the port. It records
+the owner's visual requirements, source research, native API workflow,
+Horizon MCP checks, screenshot evidence and GitHub publishing conventions.
+The [issues README](github%20issues/README.md) explains duplicate checks,
+report formatting, AI attribution, follow-ups and the existing issue numbers.
+Use [GAMEPLAY-STATUS.md](GAMEPLAY-STATUS.md) for what is actually implemented
+and tested; do not infer completion from the presence of a menu or experiment.
+
+Settings and other button-list pages have a clear background over the
+panorama: no white/gray card, border or dark backing behind the button group.
+The buttons themselves retain their normal texture and focus treatment.
+
+Current clear-background capture (disabled rows still represent unfinished work):
+
+![Game Options directly over the panorama](gui-game-options-clear.png)
+
 ## Gameplay work
 
 The native build now ports Legacy4J's axial controller movement (25% dead
@@ -38,7 +56,7 @@ work. This project has not reached full GUI or gameplay parity.
 - Replaces the Horizon title drawing with Legacy4J's exact 225x20 button
   geometry, five-pixel spacing, labels, hover state and keyboard focus. The
   title and plain Help/Controls/Settings lists stay directly over the panorama;
-  only Legacy4J screens that define a panel receive one.
+  button-list pages, including settings and skin options, stay clear too.
 - Implements the title, Play Game, Leaderboards, Help & Options, Controls,
   Settings, Store, Change Skin, Credits and Exit-confirmation menu hierarchy.
 - Play Game now uses Legacy4J's 300-pixel-wide panel, recessed list area and
@@ -87,8 +105,8 @@ work. This project has not reached full GUI or gameplay parity.
   selection. Recipe placement is wired to the public recipe API, but the tested
   crafting-table call was refused; placement remains incomplete pending diagnosis.
 - Crafting category tabs now filter Building, Redstone, Equipment and
-  Miscellaneous recipes. Title pages have a clickable Back hint. Light beveled
-  panels replace the translucent dark fallback boxes, and exit/reset dialogs
+  Miscellaneous recipes. Title pages have a clickable Back hint. World/container
+  panels use light bevels, button-list backgrounds stay clear, and exit/reset dialogs
   show translated confirmation messages with unavailable actions disabled.
 - The side browser requires 164 GUI pixels to the left of the stock inventory;
   at larger GUI scales it shows a visible scale hint instead of covering slots.

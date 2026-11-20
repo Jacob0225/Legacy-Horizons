@@ -635,14 +635,6 @@ fn draw_menu(
             BUTTON_WIDTH + 16.0,
             labels.len() as f32 * (BUTTON_HEIGHT + BUTTON_GAP) + 24.0,
         ];
-        play_menu::bevel(event.draw, panel, false);
-        event
-            .draw
-            .fill([panel[0], panel[1], panel[2], 1.0], 0xFF70_7070);
-        event.draw.fill(
-            [panel[0], panel[1] + panel[3] - 1.0, panel[2], 1.0],
-            0xFF30_3030,
-        );
         let title = translated_label(host, title_key, title_fallback);
         let title_width = event.draw.text_width(&title);
         event.draw.text(
@@ -742,14 +734,6 @@ fn draw_option_page(
     let size = event.draw.size();
     draw_legacy_panorama(event, size);
     let panel = option_panel_rect(size);
-    play_menu::bevel(event.draw, panel, false);
-    event
-        .draw
-        .fill([panel[0], panel[1], panel[2], 1.0], 0xFF70_7070);
-    event.draw.fill(
-        [panel[0], panel[1] + panel[3] - 1.0, panel[2], 1.0],
-        0xFF30_3030,
-    );
     let title_width = event.draw.text_width(title);
     event.draw.text(
         title,
