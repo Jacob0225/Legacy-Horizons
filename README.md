@@ -36,6 +36,12 @@ A Horizon-native port of Legacy4J, with GUI parity as the first milestone.
   their real result and ingredient items, supports pointer, wheel and keyboard
   selection. Recipe placement is wired to the public recipe API, but the tested
   crafting-table call was refused; placement remains incomplete pending diagnosis.
+- Crafting category tabs now filter Building, Redstone, Equipment and
+  Miscellaneous recipes. Title pages have a clickable Back hint. Light beveled
+  panels replace the translucent dark fallback boxes, and exit/reset dialogs
+  show translated confirmation messages with unavailable actions disabled.
+- The side browser requires 164 GUI pixels to the left of the stock inventory;
+  at larger GUI scales it shows a visible scale hint instead of covering slots.
 - Targets the installed Nov 18 Horizon nightly at `0b14f8a` and its matching
   horizon-mixins revision.
 

@@ -103,7 +103,6 @@ const CREDITS_KEYS: [&str; 3] = [
     "credits_and_attribution.button.licenses",
 ];
 const EXIT_BUTTONS: [&str; 2] = ["Cancel", "Quit Game"];
-const EXIT_KEYS: [&str; 2] = ["gui.cancel", ""];
 const MOUSE_OPTIONS: [&str; 10] = [
     "Sensitivity: 100%",
     "Scroll Sensitivity: 100%",
@@ -348,6 +347,7 @@ pub struct LegacyHorizon {
     crafting_scroll: AtomicUsize,
     crafting_request: AtomicUsize,
     crafting_status: AtomicUsize,
+    crafting_category: AtomicUsize,
     play_tab: AtomicUsize,
 }
 
@@ -754,23 +754,55 @@ fn crafting_recipe_rect(panel: [f32; 4], visible_index: usize) -> [f32; 4] {
     ]
 }
 
+fn crafting_category_matches(recipe: &mod_api::Recipe, category: usize) -> bool {
+    if recipe.results.is_empty() {
+        return false;
+    }
+    let category_name = recipe
+        .json
+        .get("category")
+        .and_then(|value| value.as_str())
+        .unwrap_or("misc");
+    category_name == ["building", "redstone", "equipment", "misc"][category.min(3)]
+}
+
+fn crafting_browser_fits(stock_left: f32) -> bool {
+    stock_left >= 164.0
+}
+
+fn crafting_tab_rect(panel: [f32; 4], index: usize) -> [f32; 4] {
+    [
+        panel[0] + 13.0 + index as f32 * 34.0,
+        panel[1] + 22.0,
+        30.0,
+        17.0,
+    ]
+}
+
 fn draw_crafting_menu(
     host: &dyn ClientHost,
     event: &mut ScreenRenderPostEvent<'_>,
     focus: usize,
     scroll: usize,
     status: usize,
+    category: usize,
 ) {
     let recipes = host.recipes_of_type("minecraft:crafting");
     let visible: Vec<_> = recipes
         .iter()
-        .filter(|recipe| !recipe.results.is_empty())
+        .filter(|recipe| crafting_category_matches(recipe, category))
         .collect();
-    if visible.is_empty() {
-        return;
-    }
     let [width, height] = event.draw.size();
     let stock_left = event.screen.rect[0];
+    if !crafting_browser_fits(stock_left) {
+        event.draw.text(
+            "Recipe browser needs a smaller GUI scale",
+            [8.0, height - 18.0],
+            0xFFFF_FFFF,
+            true,
+        );
+        return;
+    }
     let panel_x = if stock_left >= 164.0 {
         stock_left - 160.0
     } else {
@@ -786,13 +818,13 @@ fn draw_crafting_menu(
         [panel[0], panel[1] + panel[3] - 1.0, panel[2], 1.0],
         0xFF30_3030,
     );
-    let title = "Crafting";
+    let title = ["Building", "Redstone", "Equipment", "Miscellaneous"][category.min(3)];
     let title_width = event.draw.text_width(title);
     event.draw.text(
         title,
         [panel[0] + (panel[2] - title_width) / 2.0, panel[1] + 7.0],
-        0xFFFF_FFFF,
-        true,
+        0xFF48_4848,
+        false,
     );
 
     for (index, id) in [
@@ -804,15 +836,15 @@ fn draw_crafting_menu(
     .iter()
     .enumerate()
     {
-        let tab = [
-            panel[0] + 13.0 + index as f32 * 34.0,
-            panel[1] + 22.0,
-            30.0,
-            17.0,
-        ];
-        event
-            .draw
-            .fill(tab, if index == 0 { 0xFF70_7070 } else { 0xFF30_3030 });
+        let tab = crafting_tab_rect(panel, index);
+        event.draw.fill(
+            tab,
+            if index == category {
+                0xFF9A_AC96
+            } else {
+                0xFFAA_AAAA
+            },
+        );
         if let Ok(identifier) = Identifier::parse(id) {
             if let Some(item) = host.item_key(&identifier) {
                 let _ = event.draw.item(item, [tab[0] + 7.0, tab[1]], 16.0);
@@ -820,6 +852,15 @@ fn draw_crafting_menu(
         }
     }
 
+    if visible.is_empty() {
+        event.draw.text(
+            "No recipes in this category",
+            [panel[0] + 5.0, panel[1] + 50.0],
+            0xFF48_4848,
+            false,
+        );
+        return;
+    }
     let start = scroll.min(visible.len().saturating_sub(1));
     let count = (visible.len() - start).min(10);
     for visible_index in 0..count {
@@ -855,7 +896,7 @@ fn draw_crafting_menu(
             panel[0] + ((panel[2] - name_width) / 2.0).max(4.0),
             panel[1] + 102.0,
         ],
-        0xFFFF_FFFF,
+        0xFF48_4848,
         false,
     );
     event.draw.fill(
@@ -883,7 +924,7 @@ fn draw_crafting_menu(
     event.draw.text(
         footer,
         [panel[0] + 8.0, panel[1] + panel[3] - 9.0],
-        0xFFB0_B0B0,
+        0xFF48_4848,
         false,
     );
     let _ = width;
@@ -925,6 +966,89 @@ fn draw_panel_message(event: &mut ScreenRenderPostEvent<'_>, title: &str, messag
         0xFF48_4848,
         false,
     );
+}
+
+fn confirmation_button_rect(size: [f32; 2], index: usize) -> [f32; 4] {
+    let x = ((size[0] - 230.0) / 2.0).floor();
+    let y = ((size[1] - 145.0) / 2.0).floor();
+    [
+        x + 15.0,
+        y + 145.0 - 52.0 + index as f32 * 22.0,
+        200.0,
+        20.0,
+    ]
+}
+
+fn draw_confirmation(
+    host: &dyn ClientHost,
+    event: &mut ScreenRenderPostEvent<'_>,
+    reset: bool,
+    focus: usize,
+) {
+    let size = event.draw.size();
+    draw_legacy_panorama(event, size);
+    let panel = [
+        ((size[0] - 230.0) / 2.0).floor(),
+        ((size[1] - 145.0) / 2.0).floor(),
+        230.0,
+        145.0,
+    ];
+    play_menu::bevel(event.draw, panel, false);
+    let title = translated_label(
+        host,
+        if reset {
+            "legacy.menu.reset_settings"
+        } else {
+            "menu.quit"
+        },
+        if reset { "Reset Settings" } else { "Exit Game" },
+    );
+    event.draw.text(
+        &title,
+        [panel[0] + 15.0, panel[1] + 15.0],
+        0xFF48_4848,
+        false,
+    );
+    let message = translated_label(
+        host,
+        if reset {
+            "legacy.menu.reset_message"
+        } else {
+            "legacy.menu.gameExitMessage"
+        },
+        if reset {
+            "Are you sure you would like to reset your settings to their default values?"
+        } else {
+            "Are you sure you want to exit the game?"
+        },
+    );
+    for (index, line) in wrap_text(event, &message, 200.0).iter().enumerate() {
+        event.draw.text(
+            line,
+            [panel[0] + 15.0, panel[1] + 35.0 + index as f32 * 12.0],
+            0xFF48_4848,
+            false,
+        );
+    }
+    for (index, label) in [
+        "Cancel",
+        if reset {
+            "Reset to Defaults"
+        } else {
+            "Quit Game"
+        },
+    ]
+    .iter()
+    .enumerate()
+    {
+        let rect = confirmation_button_rect(size, index);
+        let _ = event.draw.widget_button(
+            rect,
+            &Text::literal(*label),
+            index == 0,
+            focus == index || contains(rect, event.screen.mouse),
+        );
+    }
 }
 
 fn collect_message_keys(value: &Value, keys: &mut Vec<String>) {
@@ -1170,24 +1294,9 @@ fn draw_page(
                 "Credits & Attribution",
             )),
         ),
-        PAGE_EXIT => draw_menu(
-            host,
-            event,
-            &EXIT_BUTTONS,
-            &EXIT_KEYS,
-            keyboard_focus,
-            false,
-            Some(("", "Exit Game")),
-        ),
-        PAGE_RESET_SETTINGS => draw_menu(
-            host,
-            event,
-            &RESET_SETTINGS_BUTTONS,
-            &[],
-            keyboard_focus,
-            false,
-            Some(("", "Reset Settings?")),
-        ),
+        PAGE_EXIT | PAGE_RESET_SETTINGS => {
+            draw_confirmation(host, event, page == PAGE_RESET_SETTINGS, keyboard_focus)
+        }
         PAGE_STORE_CATEGORY => {
             let category = STORE_BUTTONS[store_category.min(STORE_BUTTONS.len() - 1)];
             draw_panel_message(
@@ -1337,7 +1446,9 @@ impl Hooks for LegacyHorizon {
         let recipes = host.recipes_of_type("minecraft:crafting");
         let Some(recipe) = recipes
             .iter()
-            .filter(|recipe| !recipe.results.is_empty())
+            .filter(|recipe| {
+                crafting_category_matches(recipe, self.crafting_category.load(Ordering::Relaxed))
+            })
             .nth(index)
         else {
             return;
@@ -1445,6 +1556,12 @@ impl Hooks for LegacyHorizon {
                 self.store_category.load(Ordering::Relaxed),
                 self.play_tab.load(Ordering::Relaxed),
             );
+            if self.page.load(Ordering::Relaxed) != PAGE_TITLE {
+                let size = event.draw.size();
+                event
+                    .draw
+                    .text("< Back", [16.0, size[1] - 18.0], 0xFFFF_FFFF, true);
+            }
         } else if event.screen.id == "inventory"
             && (event.screen.menu == Some("minecraft:crafting")
                 || (event.screen.menu.is_none() && event.screen.slots >= 45))
@@ -1455,6 +1572,7 @@ impl Hooks for LegacyHorizon {
                 self.crafting_focus.load(Ordering::Relaxed),
                 self.crafting_scroll.load(Ordering::Relaxed),
                 self.crafting_status.load(Ordering::Relaxed),
+                self.crafting_category.load(Ordering::Relaxed),
             );
         }
     }
@@ -1471,14 +1589,19 @@ impl Hooks for LegacyHorizon {
             && (event.screen.menu == Some("minecraft:crafting")
                 || (event.screen.menu.is_none() && event.screen.slots >= 45))
         {
+            if !crafting_browser_fits(event.screen.rect[0]) {
+                return Flow::Continue;
+            }
             let recipes = host.recipes_of_type("minecraft:crafting");
             let count = recipes
                 .iter()
-                .filter(|recipe| !recipe.results.is_empty())
+                .filter(|recipe| {
+                    crafting_category_matches(
+                        recipe,
+                        self.crafting_category.load(Ordering::Relaxed),
+                    )
+                })
                 .count();
-            if count == 0 {
-                return Flow::Continue;
-            }
             let panel_x = if event.screen.rect[0] >= 164.0 {
                 event.screen.rect[0] - 160.0
             } else {
@@ -1495,6 +1618,16 @@ impl Hooks for LegacyHorizon {
                 .load(Ordering::Relaxed)
                 .min(count.saturating_sub(1));
             let visible_count = (count - start).min(10);
+            for category in 0..4 {
+                if contains(crafting_tab_rect(panel, category), event.screen.mouse) {
+                    self.crafting_category.store(category, Ordering::Relaxed);
+                    self.crafting_focus.store(0, Ordering::Relaxed);
+                    self.crafting_scroll.store(0, Ordering::Relaxed);
+                    self.crafting_status.store(0, Ordering::Relaxed);
+                    play_button_sound(host);
+                    return Flow::Cancel;
+                }
+            }
             if let Some(visible_index) = (0..visible_count)
                 .position(|index| contains(crafting_recipe_rect(panel, index), event.screen.mouse))
             {
@@ -1513,6 +1646,13 @@ impl Hooks for LegacyHorizon {
         let size = [event.screen.rect[2], event.screen.rect[3]];
         let page = self.page.load(Ordering::Relaxed);
         let focus = self.keyboard_focus.load(Ordering::Relaxed);
+        if page != PAGE_TITLE && contains([12.0, size[1] - 27.0, 86.0, 24.0], event.screen.mouse) {
+            let (parent, focus) = parent_page(page).unwrap_or((PAGE_TITLE, 0));
+            self.page.store(parent, Ordering::Relaxed);
+            self.keyboard_focus.store(focus, Ordering::Relaxed);
+            play_button_sound(host);
+            return Flow::Cancel;
+        }
         if page == PAGE_PLAY_GAME {
             if contains([12.0, size[1] - 27.0, 86.0, 24.0], event.screen.mouse) {
                 self.page.store(PAGE_TITLE, Ordering::Relaxed);
@@ -1537,6 +1677,8 @@ impl Hooks for LegacyHorizon {
                 how_to_play_button_rect(size, visible_index, visible_count)
             } else if option_page(page).is_some() {
                 option_button_rect(size, visible_index)
+            } else if page == PAGE_EXIT || page == PAGE_RESET_SETTINGS {
+                confirmation_button_rect(size, visible_index)
             } else {
                 submenu_button_rect(size, visible_index)
             };
@@ -1544,6 +1686,9 @@ impl Hooks for LegacyHorizon {
         });
         if let Some(visible_index) = clicked {
             let index = start + visible_index;
+            if (page == PAGE_EXIT || page == PAGE_RESET_SETTINGS) && index == 1 {
+                return Flow::Cancel;
+            }
             play_button_sound(host);
             self.keyboard_focus.store(index, Ordering::Relaxed);
             if page == PAGE_HOW_TO_PLAY {
@@ -1575,6 +1720,9 @@ impl Hooks for LegacyHorizon {
         host: &dyn ClientHost,
         event: &mut ScreenMouseScrolledPreEvent<'_>,
     ) -> Flow {
+        if event.screen.id == "inventory" && !crafting_browser_fits(event.screen.rect[0]) {
+            return Flow::Continue;
+        }
         if event.scroll[1] == 0.0 {
             return Flow::Continue;
         }
@@ -1585,7 +1733,12 @@ impl Hooks for LegacyHorizon {
             let count = host
                 .recipes_of_type("minecraft:crafting")
                 .iter()
-                .filter(|recipe| !recipe.results.is_empty())
+                .filter(|recipe| {
+                    crafting_category_matches(
+                        recipe,
+                        self.crafting_category.load(Ordering::Relaxed),
+                    )
+                })
                 .count();
             if count <= 10 {
                 return Flow::Continue;
@@ -1639,6 +1792,9 @@ impl Hooks for LegacyHorizon {
         host: &dyn ClientHost,
         event: &mut ScreenKeyPressedPreEvent<'_>,
     ) -> Flow {
+        if event.screen.id == "inventory" && !crafting_browser_fits(event.screen.rect[0]) {
+            return Flow::Continue;
+        }
         if event.repeat {
             return Flow::Continue;
         }
@@ -1649,7 +1805,12 @@ impl Hooks for LegacyHorizon {
             let count = host
                 .recipes_of_type("minecraft:crafting")
                 .iter()
-                .filter(|recipe| !recipe.results.is_empty())
+                .filter(|recipe| {
+                    crafting_category_matches(
+                        recipe,
+                        self.crafting_category.load(Ordering::Relaxed),
+                    )
+                })
                 .count();
             if count == 0 {
                 return Flow::Continue;
@@ -1756,6 +1917,9 @@ impl Hooks for LegacyHorizon {
             "key.keyboard.up" => Some(current.checked_sub(1).unwrap_or(count - 1)),
             "key.keyboard.down" => Some((current + 1) % count),
             "key.keyboard.enter" | "key.keyboard.keypad.enter" => {
+                if (page == PAGE_EXIT || page == PAGE_RESET_SETTINGS) && current == 1 {
+                    return Flow::Cancel;
+                }
                 if page == PAGE_HOW_TO_PLAY {
                     self.how_to_play_section.store(current, Ordering::Relaxed);
                     self.article_scroll.store(0, Ordering::Relaxed);
@@ -1846,6 +2010,8 @@ mod tests {
 
     #[test]
     fn options_panels_and_crafting_buttons_use_legacy_spacing() {
+        assert!(!crafting_browser_fits(125.0));
+        assert!(crafting_browser_fits(168.0));
         assert_eq!(
             option_panel_rect([512.0, 320.0]),
             [131.0, 72.0, 250.0, 215.0]

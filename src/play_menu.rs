@@ -120,9 +120,6 @@ pub(super) fn draw(host: &dyn ClientHost, event: &mut ScreenRenderPostEvent<'_>,
             false,
         );
     }
-    event
-        .draw
-        .text("Esc  Back", [16.0, size[1] - 22.0], 0xFFFF_FFFF, true);
 }
 
 #[cfg(test)]

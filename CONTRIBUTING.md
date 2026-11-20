@@ -27,12 +27,16 @@ account data, game files, local worlds, tokens, or machine-specific settings.
 - World, server, store, skin and credits flows remain incomplete.
 - Crafting currently adds a side browser to the vanilla slot layout. Selection
   and ingredient previews were observed live; recipe placement was refused in
-  the tested build and needs diagnosis. Category icons are visual scaffolding.
+  the tested build and needs diagnosis. Category tabs filter the live recipe
+  table and were exercised through Horizon MCP. The side browser cannot fit
+  beside stock slots at every GUI scale; it explicitly reports this limitation.
 - Exact Legacy crafting slot placement remains blocked by the slot-layout API
   request documented in `github issues/07-vanilla-container-slot-layout.md`.
-- Latest source passes 11 local tests. The tabbed Play Game slice builds as a
-  native mod; its latest visual check is pending because the launcher stalled
-  at sign-in/asset checks. Exact visual parity has not been verified.
+- Latest source passes 11 local tests and builds as a native mod. Live MCP
+  screenshots of the light help panel, Play Game tabs and category-filtered
+  crafting browser are included as `gui-*-progress.png`. Exact visual parity
+  has not been achieved: bundled artwork, slot layout and title actions still
+  have the upstream API limitations described in the issue reports.
 
 ## Visual references
 
