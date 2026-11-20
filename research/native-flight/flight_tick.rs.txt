@@ -1,0 +1,155 @@
+fn legacy_player_tick(
+    world: &mut MotionWorld<'_, '_, '_>,
+    direction: [f32; 2],
+    jumping: bool,
+) -> Result<()> {
+    let legacy = legacy_horizon::legacy_flight_enabled() && !world.player.spectator;
+    let boost = if legacy { legacy_horizon::legacy_flight_sprint_tick(world.player.entity_id, world.player.sprinting) } else { 0.0 };
+    // Entity.baseTick
+    world.player.was_in_powder_snow = world.player.in_powder_snow;
+    world.player.in_powder_snow = false;
+    world.player.old_position = world.player.position;
+    if world.player.jump_trigger_time > 0 {
+        world.player.jump_trigger_time -= 1;
+    }
+    world.player
+        .peaceful_regeneration(world.loop_context, world.scene.health_rules)?;
+    // LocalPlayer.aiStep: double-tap jump toggles creative flight.
+    let was_jumping = std::mem::replace(&mut world.player.was_jumping, jumping);
+    let flying_before = world.player.flying;
+    if world.player.spectator {
+        world.player.flying = true;
+        world.player.ground.on_ground = false;
+    } else if world.player.may_fly && !was_jumping && jumping && !world.player.was_auto_jump {
+        // `LocalPlayer.aiStep`: mayfly gates the flight toggle, not the
+        // flying state independently supplied by the server's abilities.
+        if world.player.jump_trigger_time == 0 {
+            world.player.jump_trigger_time = 7;
+        } else if !world.player.swimming {
+            world.player.flying = !world.player.flying;
+            if world.player.flying && (legacy || world.player.ground.on_ground) {
+                world.jump_from_ground()?;
+            }
+            world.player.jump_trigger_time = 0;
+        }
+    }
+    let toggled = flying_before != world.player.flying;
+    if toggled && legacy { world.player.shift_key_down = false; }
+    // The server clears the glide flag from the position the client sent
+    // last tick, and the client applies it a tick later, before aiStep: a
+    // landing glide lasts one more tick on the ground, with no ground
+    // friction, so a jump then keeps the speed (the elytra hop).
+    // A client of a server takes the flag from the server itself: vanilla's
+    // LocalPlayer never ends a glide of its own, and keeping the local
+    // prediction there would clear the flag before the server's
+    // SetEntityData does (#7616).
+    let ending = std::mem::take(&mut world.player.glide_ending);
+    if ending && !world.player.server_owns_glide {
+        world.player.fall_flying = false;
+    }
+    // Player.tryToStartFallFlying (canGlide: airborne, not flying, a glider;
+    // never from inside a liquid).
+    let can_glide = world.player.glider
+        && !world.player.ground.on_ground
+        && !world.player.flying
+        && world.player.status.levitation.is_none()
+        && !world.player.fluids.was_touching_water
+        && !world.player.is_in_lava();
+    // LocalPlayer.aiStep: `!onClimbable()` before tryToStartFallFlying.
+    if jumping
+        && !toggled
+        && !was_jumping
+        && !world.climbable()?
+        && !world.player.fall_flying
+        && can_glide
+    {
+        world.player.fall_flying = true;
+    }
+    // LivingEntity.updateFallFlying (fallFlyTicks is counted after the move).
+    if world.player.fall_flying {
+        // Entity.checkFallDistanceAccumulation: a glide that isn't diving
+        // (falling slower than 0.5 a tick) keeps the fall distance at 1, so
+        // landing from it hurts no more than a one-block drop.
+        if world.player.velocity.y > -0.5 && world.player.fall_distance > 1.0 {
+            world.player.fall_distance = 1.0;
+        }
+        // canGlide alone: water and lava don't end a glide, levitation does.
+        let still = world.player.glider
+            && !world.player.ground.on_ground
+            && !world.player.flying
+            && world.player.status.levitation.is_none();
+        if !still {
+            // The server clears the flag; a client of one waits for its
+            // synced data (the SetEntityData handler sets fall_flying).
+            if !world.player.server_owns_glide {
+                world.player.glide_ending = true;
+            }
+        } else if (world.player.fall_fly_ticks + 1) % 10 == 0
+            && ((world.player.fall_fly_ticks + 1) / 10) % 2 == 0
+        {
+            world.player.glider_wear += 1;
+        }
+    }
+    // LocalPlayer.goDownInWater, before LivingEntity.aiStep's velocity cleanup.
+    if world.player.fluids.was_touching_water
+        && world.player.shift_key_down
+        && !world.player.flying
+    {
+        world.player.velocity.y += f64::from(-0.04f32);
+    }
+    if world.player.flying {
+        // Vertical flight: jump up, shift down, three times the flying speed.
+        if legacy {
+            let grounded = world.player.ground.on_ground || world.player.ground.supporting_block.is_some();
+            let ascend = jumping && !(world.player.sprinting && world.player.pitch > 0.0 && grounded);
+            let descend = world.player.shift_key_down && !jumping && !grounded;
+            if ascend || descend {
+                let strength = world.player.attribute("minecraft:jump_strength")?;
+                let vertical = legacy_horizon::legacy_flight_vertical(strength, world.player.status.jump_boost, ascend, world.player.flying_speed);
+                world.move_self(&mut MoveGate::new(), Vec3::new(0.0, vertical, 0.0))?;
+            }
+        } else {
+            let ya = i32::from(jumping) - i32::from(world.player.shift_key_down);
+            if ya != 0 { world.player.velocity.y += f64::from(ya as f32 * world.player.flying_speed * 3.0); }
+        }
+    }
+    // LocalPlayer.aiStep: a player inside a block is nudged out of it.
+    let [x, z] = std::mem::take(&mut world.player.nudge);
+    if let Some(x) = x {
+        world.player.velocity.x = x;
+    }
+    if let Some(z) = z {
+        world.player.velocity.z = z;
+    }
+    let direction = if legacy && world.player.flying && !world.player.sprinting && legacy_horizon::legacy_creative_player(world.player.entity_id) {
+        legacy_horizon::legacy_flight_direction(direction, world.player.yaw)
+    } else { direction };
+    world.dry_tick(TickInput::PreparedLocal {
+        direction,
+        jumping: jumping && !world.player.flying,
+    })?;
+    if legacy && world.player.flying && world.player.sprinting {
+        let scale = f64::from(direction[1] * boost * (world.player.flying_speed / 0.05_f32));
+        let delta = horizon_world::view_direction::view_vector(world.player.pitch, world.player.yaw);
+        world.move_self(&mut MoveGate::new(), Vec3::new(delta.x * scale, delta.y * scale, delta.z * scale))?;
+    }
+    // LivingEntity.tick counts fallFlyTicks after aiStep.
+    if world.player.fall_flying {
+        world.player.fall_fly_ticks += 1;
+    } else {
+        world.player.fall_fly_ticks = 0;
+    }
+    if world.player.spectator {
+        world.player.ground.on_ground = false;
+    }
+    if world.player.flying {
+        world.player.fall_distance = 0.0;
+        if world.player.ground.on_ground && !world.player.spectator && !legacy {
+            world.player.flying = false;
+        }
+    }
+    world.player.head_yaw = world.player.yaw;
+    // Player.aiStep refreshes speed after movement, not before travel.
+    world.player.speed = world.player.attribute("minecraft:movement_speed")? as f32;
+    Ok(())
+}

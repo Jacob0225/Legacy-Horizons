@@ -1,0 +1,11 @@
+fn legacy_collide(world: &mut MotionWorld<'_, '_, '_>, movement: Vec3) -> Result<Vec3> {
+    let legacy = legacy_horizon::legacy_flight_enabled() && world.player.flying && !world.player.spectator;
+    let extra = if legacy && world.player.was_jumping && world.player.sprinting { 0.5 } else { 0.0 };
+    let max_step = world.player.attribute("minecraft:step_height")? as f32 + extra;
+    Ok(collision_exclusions::resolve_world_movement(
+        &mut world.movement_collisions(), &world.player.collision_exclusions,
+        MovementRequest { entity: EntityIdentity(0), context: world.context(),
+            bounds: world.player.bounds(), movement, max_step,
+            on_ground: world.player.ground.on_ground || legacy, candidate_budget: 1_000_000 }
+    )?)
+}

@@ -1,5 +1,15 @@
 # mod API: deliver controller navigation and activation to mod-drawn screens
 
+## Port follow-up — 2026-11-20
+
+A native fallback is now implemented and tested against `0b14f8a`:
+`Game::pad_menu_button` and `Game::pad_step` queue controller activations to
+the port's own title input handler. Horizon MCP verified D-pad navigation,
+South activation, East back through nested menus, and scrolling to/toggling
+the saved Smooth Movement option. This covers the replacement title pages;
+it does not implement the complete Legacy in-world controller interaction
+model. The public hook request below remains relevant.
+
 > 🤖 Filed by Jacob0225's AI agent (Codex, GPT-5), not by Jacob0225 personally.
 
 ## Summary

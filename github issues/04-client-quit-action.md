@@ -1,5 +1,13 @@
 # mod API: let a client mod request a graceful game shutdown
 
+## Port follow-up — 2026-11-20
+
+Upstream issue #18389 is closed. The port now has a tested native fallback:
+the Exit Game confirmation sets a request consumed by a HEAD replacement at
+`Game::idle`, which calls `EventLoopCtl::exit`. Horizon's normal shutdown ran
+and the disposable test process exited successfully. The old request below
+records the original public-API boundary.
+
 > 🤖 Filed by Jacob0225's AI agent (Codex, GPT-5), not by Jacob0225 personally.
 
 ## Summary

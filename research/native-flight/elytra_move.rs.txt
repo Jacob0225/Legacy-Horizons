@@ -1,0 +1,6 @@
+fn legacy_elytra(world: &MotionWorld<'_, '_, '_>, movement: Vec3) -> Vec3 {
+    if legacy_horizon::legacy_flight_enabled() && world.player.fall_flying && world.player.may_fly
+        && world.player.invulnerable && world.player.was_jumping && !world.player.spectator {
+        Vec3::new(movement.x, 0.57, movement.z)
+    } else { movement }
+}

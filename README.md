@@ -2,6 +2,35 @@
 
 A Horizon-native port of Legacy4J, with GUI parity as the first milestone.
 
+## Gameplay work
+
+The native build now ports Legacy4J's axial controller movement (25% dead
+zone), optional smooth input, and right-stick camera curve (34% dead zone,
+squared response, source sensitivity scaling and spyglass slowdown). Movement
+defaults to Horizon's normal shaping on remote servers. Existing Horizon
+gameplay button mappings remain in use: this is not the full Legacy controller
+preset, auto-aim, gyro or contextual inventory interaction port.
+
+Natural-spawn quotas are available separately through
+`/gamerule legacy:natural_mobcap_limits true` (off by default).
+`/legacy_mobcaps` reports the loaded population and active creature gate.
+The switch applies source bucket/type limits to supported natural spawn
+checks and temporarily lifts the vanilla Overworld creature cap; turning it
+off restores the previous numeric cap. It does not remove existing mobs.
+Breeding, manual spawning, placed entities and animal despawn/protection are
+unfinished, and Horizon's category scheduling remains in use. This is not
+the full Legacy mob-cap gamerule.
+
+Creative-flight and elytra physics remain unchanged. Native inner movement
+replacement attempts were refused by the pinned function index; preparation
+and evidence are in `research/native-flight/` and issue 15. Potion-cauldron
+preparation compiled but was rejected at startup because a mod block entity
+cannot own vanilla water cauldrons. That experiment is archived and excluded
+from the runnable build; see `research/potion-cauldron/` and issue 17.
+
+See [GAMEPLAY-STATUS.md](GAMEPLAY-STATUS.md) for tested behavior and remaining
+work. This project has not reached full GUI or gameplay parity.
+
 ## Current GUI slice
 
 - Uses the current flat Horizon native-mod project format.
@@ -30,6 +59,12 @@ A Horizon-native port of Legacy4J, with GUI parity as the first milestone.
 - User Interface → Display Hand now hides both first-person hands and held
   items, matching Legacy4J's `GameRendererMixin`. It saves separately in
   `config/legacy/interface.json`; world/HUD rendering remains independent.
+- Display HUD, Display Game Messages, Death Messages and Announce Advancements
+  now work and save in the same file. Message filters use translation-component
+  keys and preserve player chat. Display HUD also controls the block outline.
+- Controller D-pad/stick navigation, A/confirm, B/back and bumper tab changes
+  now reach the replacement title pages through native adapters. Exit Game's
+  confirmation now performs Horizon's normal graceful shutdown.
 - Implements the valid 43-entry How To Play index. Its articles are read from
   Legacy4J's original UI-definition JSON, translated through Horizon's active
   language resources, formatting-cleaned, wrapped and scrollable.
@@ -88,16 +123,23 @@ The exact public-API boundaries are documented as ready-to-post reports in
     [#18811](https://github.com/horizon-rust/horizon/issues/18811).
 16. elytra camera banking requires camera-pose roll, already requested in
     [#18694](https://github.com/horizon-rust/horizon/issues/18694); no duplicate filed.
+17. saved/synced potion state on vanilla cauldrons:
+    [#19095](https://github.com/horizon-rust/horizon/issues/19095).
+18. cancellable animal love-mode entry for breeding quotas:
+    [#19105](https://github.com/horizon-rust/horizon/issues/19105).
+19. controller-axis processing hooks (working native fallback included):
+    [#19106](https://github.com/horizon-rust/horizon/issues/19106).
 
 Issues 1-12 were posted by the project owner. Issue 13 was checked for an
 existing report and posted with GitHub CLI as
 [`#18655`](https://github.com/horizon-rust/horizon/issues/18655). Every report
 also has a matching local Markdown copy.
 
-This is not full Legacy4J GUI parity yet. The title/help slice is usable with
-mouse and keyboard, while the remaining title actions, controller path, custom
-art, player preview, functional settings and changed container layouts depend
-on the API surfaces above. In particular, the crafting browser renders and selects recipes,
+Issue 4 is closed and the port now implements graceful quit natively. Issue 9
+has a working native adapter for title-menu navigation; it is not a full
+controller port. Other title actions, custom art, player preview, vanilla
+settings writes and changed container layouts remain unfinished. In
+particular, the crafting browser renders and selects recipes,
 but it stays beside Horizon's stock inventory slots until issue 7's slot-layout
 API exists; moving those live slots into Legacy4J's 348x215 crafting panel is
 not safe with the current API.

@@ -4,6 +4,14 @@
 
 Submitted: https://github.com/horizon-rust/horizon/issues/18811
 
+Native route follow-up: https://github.com/horizon-rust/horizon/issues/18811#issuecomment-7042510856
+
+The native route works for the event loop and controller functions. The pinned
+engine only publishes the outer controlled simulation entry in
+`horizon_client_lib::motion`, not the inner flight, glide, speed and collision
+targets. Preparatory helpers were removed from the runnable manifest after
+`E_MIXIN_TARGET_MISSING`; see `research/native-flight/`.
+
 ## Port and target
 
 Legacy4J → [Legacy Horizons](https://github.com/Jacob0225/Legacy-Horizons), native client mod, Minecraft 26.3, Mod API 0.2. Inspected SDK: Horizon `0b14f8acfd97fa2c750e42795249dcc981178ca4`.

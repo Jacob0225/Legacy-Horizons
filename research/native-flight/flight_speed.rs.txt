@@ -1,0 +1,5 @@
+fn legacy_speed(world: &MotionWorld<'_, '_, '_>, value: Result<f32>) -> Result<f32> {
+    value.map(|speed| if legacy_horizon::legacy_flight_enabled() && world.player.flying && !world.player.spectator {
+        speed * if world.player.sprinting { 1.3 } else { 2.0 }
+    } else { speed })
+}

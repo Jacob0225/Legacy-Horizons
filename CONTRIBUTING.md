@@ -41,7 +41,7 @@ account data, game files, local worlds, tokens, or machine-specific settings.
   beside stock slots at every GUI scale; it explicitly reports this limitation.
 - Exact Legacy crafting slot placement remains blocked by the slot-layout API
   request documented in `github issues/07-vanilla-container-slot-layout.md`.
-- Latest source passes 14 local tests and builds as a native mod. Live MCP
+- Latest source passes 23 local tests and builds as a native mod. Live MCP
   screenshots of clear help, Play Game tabs and category-filtered
   crafting browser are included as `gui-*-progress.png`. Exact visual parity
   has not been achieved: bundled artwork, slot layout and title actions still
@@ -58,6 +58,20 @@ Creative-flight source research is documented in issue 15 (#18811). The client
 API lacks the collision-aware local movement and flight landing/takeoff policy
 that Legacy4J needs, so this port leaves flight physics unchanged. Server
 velocity APIs do not fill this gap.
+
+Native function replacements now implement graceful quit, controller title
+navigation, axial smooth movement and the source right-stick camera curve.
+The pinned lower movement crate does not publish the inner flight/collision
+targets the archived experiments attempted. Do not enable those experiments
+or describe their arithmetic tests as working flight physics.
+
+The natural-spawn subset is opt-in through `legacy:natural_mobcap_limits`.
+Use `/legacy_mobcaps` to inspect the live census and verify the temporary
+creature-gate override/restoration. Do not call this the complete source mob
+cap policy: breeding/manual placement/despawn rules and scheduling parity
+still require work. The potion-cauldron experiment is excluded from production
+because vanilla-block ownership registration was refused at runtime (#19095).
+See [GAMEPLAY-STATUS.md](GAMEPLAY-STATUS.md) for evidence and remaining scope.
 
 ## Visual references
 

@@ -13,13 +13,36 @@ use mod_api::{
     ScreenRenderPostEvent, ScreenRenderPreEvent, SoundPlay, Text,
 };
 use serde_json::Value;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 mod audio;
+mod controller;
 mod credits;
+#[cfg(test)]
+mod flight_math;
 mod interface;
+mod mobcaps;
 mod play_menu;
+#[cfg(test)]
+#[allow(dead_code)]
+mod potion_math;
+
+static QUIT_REQUESTED: AtomicBool = AtomicBool::new(false);
+
+/// Consumed by the native event-loop mixin; follows Horizon's normal shutdown path.
+pub fn take_quit_request() -> bool {
+    QUIT_REQUESTED.swap(false, Ordering::Relaxed)
+}
+
+pub use controller::{
+    input_active as legacy_controller_input_active, local_server as legacy_controller_local_server,
+    look as legacy_controller_look, set_input as legacy_controller_set_input,
+    vector as legacy_controller_vector,
+};
+pub use controller::{
+    menu_key as legacy_title_controller_key, title_active as legacy_title_controller_active,
+};
 
 fn now_millis() -> usize {
     SystemTime::now()
@@ -138,17 +161,18 @@ const KEY_BIND_OPTIONS: [&str; 12] = [
     "Open Inventory: E",
     "Drop Item: Q",
 ];
-const CONTROLLER_OPTIONS: [&str; 8] = [
+const CONTROLLER_OPTIONS: [&str; 9] = [
     "Selected Controller: PS4 Controller",
     "Controller Cursor: ON",
     "Interface Sensitivity: 100%",
     "Invert Look: OFF",
     "Auto Aim: ON",
     "Left Stick Dead Zone: 15%",
-    "Right Stick Dead Zone: 15%",
+    "Right Stick Dead Zone: 34%",
     "Reset Controller Binds",
+    "Smooth Movement: ON",
 ];
-const GAME_OPTIONS: [&str; 9] = [
+const GAME_OPTIONS: [&str; 10] = [
     "Auto Jump: ON",
     "View Bobbing: ON",
     "Flying View Rolling: ON",
@@ -158,6 +182,7 @@ const GAME_OPTIONS: [&str; 9] = [
     "Autosave Interval: 15 minutes",
     "Look Sensitivity: 100%",
     "Difficulty: Normal",
+    "Announce Advancements: OFF",
 ];
 const AUDIO_OPTIONS: [&str; 4] = [
     "Music: 100%",
@@ -363,6 +388,7 @@ pub struct LegacyHorizon {
     credits_clock: std::sync::Mutex<credits::RollClock>,
     audio: audio::Options,
     interface: interface::Options,
+    mobcaps: mobcaps::Policy,
 }
 
 fn menu_button_rects<const N: usize>(size: [f32; 2]) -> [[f32; 4]; N] {
@@ -733,7 +759,7 @@ fn draw_option_page(
         let highlighted = contains(rect, event.screen.mouse) || index == keyboard_focus;
         let label = option_label(host, page, index, labels[index], audio, interface);
         let enabled =
-            (page == PAGE_AUDIO && index >= 2) || (page == PAGE_USER_INTERFACE && index == 1);
+            (page == PAGE_AUDIO && index >= 2) || interface_setting(page, index).is_some();
         let _ = event
             .draw
             .widget_button(rect, &Text::literal(label), enabled, highlighted);
@@ -760,6 +786,19 @@ fn on_off(on: bool) -> &'static str {
     if on { "ON" } else { "OFF" }
 }
 
+fn interface_setting(page: usize, index: usize) -> Option<interface::Setting> {
+    use interface::Setting::*;
+    match (page, index) {
+        (PAGE_USER_INTERFACE, 0) => Some(Hud),
+        (PAGE_USER_INTERFACE, 1) => Some(Hand),
+        (PAGE_USER_INTERFACE, 2) => Some(GameMessages),
+        (PAGE_GAME_OPTIONS, 4) => Some(DeathMessages),
+        (PAGE_GAME_OPTIONS, 9) => Some(AdvancementMessages),
+        (PAGE_CONTROLLER, 8) => Some(SmoothControllerMovement),
+        _ => None,
+    }
+}
+
 fn option_label(
     host: &dyn ClientHost,
     page: usize,
@@ -769,8 +808,16 @@ fn option_label(
     interface: &interface::Options,
 ) -> String {
     let input = host.input_options();
+    if let Some(setting) = interface_setting(page, index) {
+        return format!(
+            "{}: {}",
+            fallback.split(':').next().unwrap_or(fallback),
+            on_off(interface.enabled(setting))
+        );
+    }
     let value = match (page, index) {
-        (PAGE_USER_INTERFACE, 1) => Some(on_off(interface.display_hand()).into()),
+        (PAGE_CONTROLLER, 5) => Some("25%".into()),
+        (PAGE_CONTROLLER, 6) => Some("34%".into()),
         (PAGE_MOUSE_SETTINGS, 0) | (PAGE_GAME_OPTIONS, 7) => {
             Some(format!("{}%", (input.sensitivity * 200.0).round()))
         }
@@ -1124,7 +1171,7 @@ fn draw_confirmation(
         let _ = event.draw.widget_button(
             rect,
             &Text::literal(*label),
-            index == 0,
+            index == 0 || !reset,
             focus == index || contains(rect, event.screen.mouse),
         );
     }
@@ -1525,6 +1572,108 @@ fn draw_legacy_panorama(event: &mut ScreenRenderPostEvent<'_>, size: [f32; 2]) {
 
 #[mod_api::horizon_mod]
 impl Hooks for LegacyHorizon {
+    fn register_commands(
+        &self,
+        _: &mut dyn mod_api::ServerHost,
+        event: &mut mod_api::RegisterCommandsEvent<'_>,
+    ) {
+        event.commands.push(mod_api::Command::new("legacy_mobcaps"));
+    }
+
+    fn run_mod_command(
+        &self,
+        host: &mut dyn mod_api::ServerHost,
+        event: &mut mod_api::RunModCommandEvent<'_>,
+    ) -> Flow {
+        if event.command.literals.first().map(String::as_str) != Some("legacy_mobcaps") {
+            return Flow::Continue;
+        }
+        if let Some(dimension) = event.command.dimension.id(host) {
+            let message = self.mobcaps.status(host, &dimension);
+            let _ = host.commands().feedback(Text::literal(message));
+        }
+        Flow::Cancel
+    }
+
+    fn register(&self, registrar: &mut dyn mod_api::Registrar, _: &RegistrationContext) {
+        self.mobcaps.register(registrar);
+    }
+
+    fn potential_spawns(
+        &self,
+        host: &dyn mod_api::Host,
+        event: &mut mod_api::PotentialSpawnsEvent<'_>,
+    ) -> Flow {
+        self.mobcaps.observe(host, event);
+        Flow::Continue
+    }
+
+    fn mob_spawn_position_check(
+        &self,
+        host: &dyn mod_api::Host,
+        event: &mut mod_api::MobSpawnPositionCheckEvent<'_>,
+    ) {
+        self.mobcaps.check(host, event);
+    }
+
+    fn entity_join_level(
+        &self,
+        _: &mut dyn mod_api::ServerHost,
+        event: &mut mod_api::EntityJoinLevelEvent<'_>,
+    ) -> Flow {
+        self.mobcaps.invalidate(event.dimension);
+        Flow::Continue
+    }
+
+    fn entity_leave_level(
+        &self,
+        _: &mut dyn mod_api::ServerHost,
+        event: &mut mod_api::EntityLeaveLevelEvent<'_>,
+    ) {
+        self.mobcaps.invalidate(event.dimension);
+    }
+
+    fn server_tick(
+        &self,
+        host: &mut dyn mod_api::ServerHost,
+        _: &mut mod_api::ServerTickEvent<'_>,
+    ) {
+        self.mobcaps.next_tick();
+        self.mobcaps.sync_creature_limit(host);
+        controller::set_server(true);
+    }
+
+    fn server_stopped(&self, _: &mut dyn mod_api::ServerHost, _: &mut mod_api::ServerStoppedEvent) {
+        self.mobcaps.clear();
+        controller::set_server(false);
+    }
+    fn render_gui_pre(&self, _: &dyn ClientHost, _: &mut mod_api::RenderGuiPreEvent) -> Flow {
+        if self.interface.enabled(interface::Setting::Hud) {
+            Flow::Continue
+        } else {
+            Flow::Cancel
+        }
+    }
+
+    fn block_highlight(&self, _: &dyn ClientHost, _: &mut mod_api::BlockHighlightEvent) -> Flow {
+        if self.interface.enabled(interface::Setting::Hud) {
+            Flow::Continue
+        } else {
+            Flow::Cancel
+        }
+    }
+
+    fn client_chat_received(
+        &self,
+        _: &mut dyn ClientHost,
+        event: &mut mod_api::ClientChatReceivedEvent<'_>,
+    ) -> Flow {
+        if self.interface.suppress_message(event.system, event.message) {
+            Flow::Cancel
+        } else {
+            Flow::Continue
+        }
+    }
     fn render_hand(&self, _: &dyn ClientHost, _: &mut mod_api::RenderHandEvent<'_, '_>) -> Flow {
         if self.interface.display_hand() {
             Flow::Continue
@@ -1646,6 +1795,19 @@ impl Hooks for LegacyHorizon {
     }
 
     fn screen_render_post(&self, host: &dyn ClientHost, event: &mut ScreenRenderPostEvent<'_>) {
+        controller::set_title_active(event.screen.id == TITLE_SCREEN);
+        if event.screen.id == TITLE_SCREEN {
+            while let Some(key) = controller::take_menu_key() {
+                let mut input = ScreenKeyPressedPreEvent {
+                    screen: event.screen,
+                    key,
+                    repeat: false,
+                    modifiers: 0,
+                    cancelled: false,
+                };
+                self.screen_key_pressed_pre(host, &mut input);
+            }
+        }
         self.audio.sync(host);
         self.interface.sync(host);
         if event.screen.id == TITLE_SCREEN {
@@ -1798,10 +1960,14 @@ impl Hooks for LegacyHorizon {
             if page == PAGE_AUDIO && index >= 2 {
                 self.audio.toggle(index - 2);
             }
-            if page == PAGE_USER_INTERFACE && index == 1 {
-                self.interface.toggle_hand();
+            if let Some(setting) = interface_setting(page, index) {
+                self.interface.toggle(setting);
             }
-            if (page == PAGE_EXIT || page == PAGE_RESET_SETTINGS) && index == 1 {
+            if page == PAGE_EXIT && index == 1 {
+                QUIT_REQUESTED.store(true, Ordering::Relaxed);
+                return Flow::Cancel;
+            }
+            if page == PAGE_RESET_SETTINGS && index == 1 {
                 return Flow::Cancel;
             }
             play_button_sound(host);
@@ -2029,8 +2195,8 @@ impl Hooks for LegacyHorizon {
             "key.keyboard.up" => Some(current.checked_sub(1).unwrap_or(count - 1)),
             "key.keyboard.down" => Some((current + 1) % count),
             "key.keyboard.enter" | "key.keyboard.keypad.enter" => {
-                if page == PAGE_USER_INTERFACE && current == 1 {
-                    self.interface.toggle_hand();
+                if let Some(setting) = interface_setting(page, current) {
+                    self.interface.toggle(setting);
                     play_button_sound(host);
                     return Flow::Cancel;
                 }
@@ -2039,7 +2205,11 @@ impl Hooks for LegacyHorizon {
                     play_button_sound(host);
                     return Flow::Cancel;
                 }
-                if (page == PAGE_EXIT || page == PAGE_RESET_SETTINGS) && current == 1 {
+                if page == PAGE_EXIT && current == 1 {
+                    QUIT_REQUESTED.store(true, Ordering::Relaxed);
+                    return Flow::Cancel;
+                }
+                if page == PAGE_RESET_SETTINGS && current == 1 {
                     return Flow::Cancel;
                 }
                 if page == PAGE_HOW_TO_PLAY {
