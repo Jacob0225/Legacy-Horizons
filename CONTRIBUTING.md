@@ -30,6 +30,9 @@ account data, game files, local worlds, tokens, or machine-specific settings.
   `ElytraOnPlayerSoundInstanceMixin`. `legacy_elytra_sound: false` in that file
   disables this local sound behavior. Custom replacement sound events are not
   identified as vanilla minecart/cave instances.
+- Display Hand works through the cancellable first-person hand hook and saves
+  in `config/legacy/interface.json`. Live before/after captures are included
+  as `gameplay-hand-on.png`, `gameplay-hand-off.png` and `gameplay-held-item-off.png`.
 - World, server, store, skin and credits flows remain incomplete.
 - Crafting currently adds a side browser to the vanilla slot layout. Selection
   and ingredient previews were observed live; recipe placement was refused in

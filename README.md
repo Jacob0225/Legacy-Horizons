@@ -27,6 +27,9 @@ A Horizon-native port of Legacy4J, with GUI parity as the first milestone.
   both starts and live updates. Preferences live in `config/legacy/audio.json`.
   This is a partial audio port; music fades and the full Legacy audio system
   remain unported.
+- User Interface → Display Hand now hides both first-person hands and held
+  items, matching Legacy4J's `GameRendererMixin`. It saves separately in
+  `config/legacy/interface.json`; world/HUD rendering remains independent.
 - Implements the valid 43-entry How To Play index. Its articles are read from
   Legacy4J's original UI-definition JSON, translated through Horizon's active
   language resources, formatting-cleaned, wrapped and scrollable.

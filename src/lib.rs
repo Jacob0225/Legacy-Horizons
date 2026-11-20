@@ -18,6 +18,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 mod audio;
 mod credits;
+mod interface;
 mod play_menu;
 
 fn now_millis() -> usize {
@@ -361,6 +362,7 @@ pub struct LegacyHorizon {
     credits_started: AtomicUsize,
     credits_clock: std::sync::Mutex<credits::RollClock>,
     audio: audio::Options,
+    interface: interface::Options,
 }
 
 fn menu_button_rects<const N: usize>(size: [f32; 2]) -> [[f32; 4]; N] {
@@ -704,6 +706,7 @@ fn draw_option_page(
     keyboard_focus: usize,
     page: usize,
     audio: &audio::Options,
+    interface: &interface::Options,
 ) {
     let size = event.draw.size();
     draw_legacy_panorama(event, size);
@@ -728,8 +731,9 @@ fn draw_option_page(
         let index = start + visible_index;
         let rect = option_button_rect(size, visible_index);
         let highlighted = contains(rect, event.screen.mouse) || index == keyboard_focus;
-        let label = option_label(host, page, index, labels[index], audio);
-        let enabled = page == PAGE_AUDIO && index >= 2;
+        let label = option_label(host, page, index, labels[index], audio, interface);
+        let enabled =
+            (page == PAGE_AUDIO && index >= 2) || (page == PAGE_USER_INTERFACE && index == 1);
         let _ = event
             .draw
             .widget_button(rect, &Text::literal(label), enabled, highlighted);
@@ -762,9 +766,11 @@ fn option_label(
     index: usize,
     fallback: &str,
     audio: &audio::Options,
+    interface: &interface::Options,
 ) -> String {
     let input = host.input_options();
     let value = match (page, index) {
+        (PAGE_USER_INTERFACE, 1) => Some(on_off(interface.display_hand()).into()),
         (PAGE_MOUSE_SETTINGS, 0) | (PAGE_GAME_OPTIONS, 7) => {
             Some(format!("{}%", (input.sensitivity * 200.0).round()))
         }
@@ -1298,6 +1304,7 @@ fn draw_page(
     store_category: usize,
     play_tab: usize,
     audio: &audio::Options,
+    interface: &interface::Options,
 ) {
     match page {
         PAGE_HELP_AND_OPTIONS => draw_menu(
@@ -1377,7 +1384,16 @@ fn draw_page(
         }
         page if option_page(page).is_some() => {
             let (labels, title) = option_page(page).expect("checked above");
-            draw_option_page(host, event, labels, title, keyboard_focus, page, audio);
+            draw_option_page(
+                host,
+                event,
+                labels,
+                title,
+                keyboard_focus,
+                page,
+                audio,
+                interface,
+            );
         }
         _ => draw_menu(
             host,
@@ -1509,12 +1525,20 @@ fn draw_legacy_panorama(event: &mut ScreenRenderPostEvent<'_>, size: [f32; 2]) {
 
 #[mod_api::horizon_mod]
 impl Hooks for LegacyHorizon {
+    fn render_hand(&self, _: &dyn ClientHost, _: &mut mod_api::RenderHandEvent<'_, '_>) -> Flow {
+        if self.interface.display_hand() {
+            Flow::Continue
+        } else {
+            Flow::Cancel
+        }
+    }
     fn play_sound(&self, _: &dyn mod_api::LoopContext, event: &mut mod_api::PlaySoundEvent<'_>) {
         self.audio.filter(event.sound);
     }
 
     fn client_tick_pre(&self, host: &mut dyn ClientHost, _: &mut ClientTickPreEvent) {
         self.audio.sync(host);
+        self.interface.sync(host);
         let request = self.crafting_request.swap(0, Ordering::Relaxed);
         if request == 0 {
             return;
@@ -1623,6 +1647,7 @@ impl Hooks for LegacyHorizon {
 
     fn screen_render_post(&self, host: &dyn ClientHost, event: &mut ScreenRenderPostEvent<'_>) {
         self.audio.sync(host);
+        self.interface.sync(host);
         if event.screen.id == TITLE_SCREEN {
             if self.page.load(Ordering::Relaxed) == PAGE_CREDITS_ROLL {
                 credits::draw(
@@ -1642,6 +1667,7 @@ impl Hooks for LegacyHorizon {
                     self.store_category.load(Ordering::Relaxed),
                     self.play_tab.load(Ordering::Relaxed),
                     &self.audio,
+                    &self.interface,
                 );
             }
             if self.page.load(Ordering::Relaxed) != PAGE_TITLE {
@@ -1771,6 +1797,9 @@ impl Hooks for LegacyHorizon {
             let index = start + visible_index;
             if page == PAGE_AUDIO && index >= 2 {
                 self.audio.toggle(index - 2);
+            }
+            if page == PAGE_USER_INTERFACE && index == 1 {
+                self.interface.toggle_hand();
             }
             if (page == PAGE_EXIT || page == PAGE_RESET_SETTINGS) && index == 1 {
                 return Flow::Cancel;
@@ -2000,6 +2029,11 @@ impl Hooks for LegacyHorizon {
             "key.keyboard.up" => Some(current.checked_sub(1).unwrap_or(count - 1)),
             "key.keyboard.down" => Some((current + 1) % count),
             "key.keyboard.enter" | "key.keyboard.keypad.enter" => {
+                if page == PAGE_USER_INTERFACE && current == 1 {
+                    self.interface.toggle_hand();
+                    play_button_sound(host);
+                    return Flow::Cancel;
+                }
                 if page == PAGE_AUDIO && current >= 2 {
                     self.audio.toggle(current - 2);
                     play_button_sound(host);
