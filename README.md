@@ -19,6 +19,14 @@ A Horizon-native port of Legacy4J, with GUI parity as the first milestone.
 - Implements the title-side Mouse Settings, Key Binds, Controller, Game
   Options, Audio, Graphics, User Interface, Reset Settings and store-category
   pages, including their scrolling and parent navigation.
+- Reads actual supported mouse/input options, key bindings, view bobbing and
+  master volume. These vanilla values are read-only; unsupported option rows
+  are explicitly disabled instead of displaying invented defaults.
+- Cave and minecart sound switches work and save across restarts. Legacy
+  elytra sound uses the original volume cap of 0.8 and fixed pitch of 1.0 on
+  both starts and live updates. Preferences live in `config/legacy/audio.json`.
+  This is a partial audio port; music fades and the full Legacy audio system
+  remain unported.
 - Implements the valid 43-entry How To Play index. Its articles are read from
   Legacy4J's original UI-definition JSON, translated through Horizon's active
   language resources, formatting-cleaned, wrapped and scrollable.
@@ -73,6 +81,10 @@ The exact public-API boundaries are documented as ready-to-post reports in
     replacement title renderer.
 14. native client-tick recipe placement refusing an open crafting table:
     [#18799](https://github.com/horizon-rust/horizon/issues/18799).
+15. collision-aware local creative-flight movement and takeoff/landing rules:
+    [#18811](https://github.com/horizon-rust/horizon/issues/18811).
+16. elytra camera banking requires camera-pose roll, already requested in
+    [#18694](https://github.com/horizon-rust/horizon/issues/18694); no duplicate filed.
 
 Issues 1-12 were posted by the project owner. Issue 13 was checked for an
 existing report and posted with GitHub CLI as

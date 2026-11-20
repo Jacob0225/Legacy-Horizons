@@ -22,8 +22,14 @@ account data, game files, local worlds, tokens, or machine-specific settings.
 ## Status
 
 - Title and Help navigation and the 43-section help index/article viewer work.
-- Additional options pages are visual scaffolding with hard-coded displayed
-  values. They do not read or apply the player's actual settings.
+- Options pages read supported input preferences, key bindings, view bobbing
+  and master volume. Vanilla settings remain read-only (issue 8); rows without
+  a supported read or implementation say `Unavailable` and are disabled.
+- Cave and minecart sound switches work and persist in `config/legacy/audio.json`.
+  Legacy elytra audio caps instance volume at 0.8 and fixes pitch at 1.0, matching
+  `ElytraOnPlayerSoundInstanceMixin`. `legacy_elytra_sound: false` in that file
+  disables this local sound behavior. Custom replacement sound events are not
+  identified as vanilla minecart/cave instances.
 - World, server, store, skin and credits flows remain incomplete.
 - Crafting currently adds a side browser to the vanilla slot layout. Selection
   and ingredient previews were observed live; recipe placement was refused in
@@ -32,8 +38,8 @@ account data, game files, local worlds, tokens, or machine-specific settings.
   beside stock slots at every GUI scale; it explicitly reports this limitation.
 - Exact Legacy crafting slot placement remains blocked by the slot-layout API
   request documented in `github issues/07-vanilla-container-slot-layout.md`.
-- Latest source passes 12 local tests and builds as a native mod. Live MCP
-  screenshots of the light help panel, Play Game tabs and category-filtered
+- Latest source passes 14 local tests and builds as a native mod. Live MCP
+  screenshots of clear help, Play Game tabs and category-filtered
   crafting browser are included as `gui-*-progress.png`. Exact visual parity
   has not been achieved: bundled artwork, slot layout and title actions still
   have the upstream API limitations described in the issue reports.
@@ -44,6 +50,11 @@ No NeoLegacy code or assets were copied into this repository. Credits uses
 the packaged Legacy4J credits JSON and the player's active Minecraft resources.
 Credits artwork is blocked by issue 1. Table recipe placement's exact observed
 refusal is documented in issue 14 (#18799); it is not reported as functional.
+
+Creative-flight source research is documented in issue 15 (#18811). The client
+API lacks the collision-aware local movement and flight landing/takeoff policy
+that Legacy4J needs, so this port leaves flight physics unchanged. Server
+velocity APIs do not fill this gap.
 
 ## Visual references
 
