@@ -1,5 +1,17 @@
 # mod API: let client mods apply validated vanilla option changes
 
+## Port follow-up — 2026-11-20
+
+The native route now supplies a working partial fallback for this port. A
+HEAD helper at `Game::idle` consumes queued mouse X/Y inversion, discrete
+scrolling, auto-jump and bobbing changes and calls `Game::options_control`
+with `options-set`. This retains engine validation, application and normal
+settings persistence. Controller inversion uses its typed boolean field and
+the normal `Event::Changed` handling, which saves controller settings too.
+Horizon MCP menu clicks changed the live engine values and normal settings
+files. The original public-API request remains relevant; sliders, key-binding
+editing and the rest of the custom settings UI are not finished.
+
 > 🤖 Filed by Jacob0225's AI agent (Codex, GPT-5), not by Jacob0225 personally.
 
 ## Summary

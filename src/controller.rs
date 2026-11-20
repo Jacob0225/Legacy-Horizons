@@ -26,6 +26,20 @@ pub fn take_menu_key() -> Option<&'static str> {
 }
 static LOCAL_SERVER: AtomicBool = AtomicBool::new(false);
 static SMOOTH: AtomicBool = AtomicBool::new(true);
+static INVERT_LOOK: AtomicBool = AtomicBool::new(false);
+static INVERT_REQUESTS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+pub fn inverted_look() -> bool {
+    INVERT_LOOK.load(Ordering::Relaxed)
+}
+pub fn report_inverted_look(enabled: bool) {
+    INVERT_LOOK.store(enabled, Ordering::Relaxed);
+}
+pub fn request_invert_look() {
+    INVERT_REQUESTS.fetch_add(1, Ordering::Relaxed);
+}
+pub fn take_invert_request() -> bool {
+    INVERT_REQUESTS.swap(0, Ordering::Relaxed) % 2 != 0
+}
 thread_local! { static LEGACY_INPUT: Cell<bool> = const { Cell::new(false) }; }
 pub fn set_server(active: bool) {
     LOCAL_SERVER.store(active, Ordering::Relaxed);

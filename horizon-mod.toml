@@ -17,7 +17,7 @@ id = "graceful_quit"
 target = "horizon_client::game::window_handler::Game<'_>::idle"
 kind = "HEAD"
 helper = "src/mixins/quit.rs"
-bindings = [{ name = "event_loop", ty = "&dyn EventLoopCtl", value = "event_loop" }]
+bindings = [{ name = "game", ty = "&mut Game<'_>", value = "self" }, { name = "event_loop", ty = "&dyn EventLoopCtl", value = "event_loop" }]
 
 [[native.mixin]]
 id = "console_controller_movement"

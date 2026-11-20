@@ -1,8 +1,9 @@
 # Gameplay port status — 2026-11-20
 
 Target: Minecraft 26.3, Horizon `0b14f8a`, Mod API 0.2.
-Last tested native build: `native-0b14f8a-b13f98955780`.
-Final formatting-only rebuild passed as `native-0b14f8a-266b42af0ddb`.
+Gameplay/census validation build: `native-0b14f8a-b13f98955780`.
+Native settings adapter validation build: `native-0b14f8a-21f10fddf2f7`.
+Final formatting-only package build: `native-0b14f8a-70df1564f13c` (passed).
 
 ## Requested features
 
@@ -46,6 +47,11 @@ controller interactions are impossible with native code.
 - Display HUD/outline, hand, system/death/advancement messages save in
   `config/legacy/interface.json`. Normal player chat is retained.
 - Exit confirmation uses the native event loop's normal shutdown path.
+- Mouse X/Y inversion, discrete scrolling, auto jump and view bobbing use
+  Horizon's validated `options-set` engine path, including application/save.
+  Controller Invert Look changes the typed controller setting and uses the
+  normal settings-changed handler. These six rows accept mouse and
+  keyboard/controller activation; ordinary settings sliders remain unfinished.
 
 ## Verification
 
@@ -73,6 +79,15 @@ Horizon MCP, disposable instance `legacy-horizon-gui-test`, world
   not yet exhaustively exercised live for every species/dimension.
 - HUD OFF removed the HUD while the hand/held block remained; it was restored
   ON using the menu. Quit confirmation exited the client successfully.
+- Menu clicks changed mouse X/Y inversion, discrete scrolling and auto jump
+  false→true, bobbing true→false and controller inversion false→true. MCP
+  `options-get` reported all five vanilla changes, and both normal settings
+  files contained the saved values. `gui-mouse-options-progress.png` and
+  `gui-game-options-progress.png` capture these actual temporary test values.
+- After a full client restart, MCP reported all five vanilla values unchanged
+  and the controller menu read Invert Look ON. D-pad/South toggled controller
+  inversion back OFF. Controller activation also toggled bobbing true→false→true
+  through the native setter. All six test values were restored afterwards.
 
 Screenshots: `gui-controller-progress.png`, `gameplay-hud-off.png` and
 `gameplay-controller-look.png`.

@@ -49,8 +49,10 @@ work. This project has not reached full GUI or gameplay parity.
   Options, Audio, Graphics, User Interface, Reset Settings and store-category
   pages, including their scrolling and parent navigation.
 - Reads actual supported mouse/input options, key bindings, view bobbing and
-  master volume. These vanilla values are read-only; unsupported option rows
-  are explicitly disabled instead of displaying invented defaults.
+  master volume. Native settings adapters now apply/save mouse X/Y inversion,
+  discrete scrolling, auto jump, view bobbing and controller Invert Look.
+  Other vanilla values remain read-only; unsupported option rows are explicitly
+  disabled instead of displaying invented defaults.
 - Cave and minecart sound switches work and save across restarts. Legacy
   elytra sound uses the original volume cap of 0.8 and fixed pitch of 1.0 on
   both starts and live updates. Preferences live in `config/legacy/audio.json`.
@@ -138,7 +140,7 @@ also has a matching local Markdown copy.
 Issue 4 is closed and the port now implements graceful quit natively. Issue 9
 has a working native adapter for title-menu navigation; it is not a full
 controller port. Other title actions, custom art, player preview, vanilla
-settings writes and changed container layouts remain unfinished. In
+settings sliders/key-binding writes and changed container layouts remain unfinished. In
 particular, the crafting browser renders and selects recipes,
 but it stays beside Horizon's stock inventory slots until issue 7's slot-layout
 API exists; moving those live slots into Legacy4J's 348x215 crafting panel is

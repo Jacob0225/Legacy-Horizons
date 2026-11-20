@@ -23,8 +23,10 @@ account data, game files, local worlds, tokens, or machine-specific settings.
 
 - Title and Help navigation and the 43-section help index/article viewer work.
 - Options pages read supported input preferences, key bindings, view bobbing
-  and master volume. Vanilla settings remain read-only (issue 8); rows without
-  a supported read or implementation say `Unavailable` and are disabled.
+  and master volume. Native adapters apply/save mouse X/Y inversion, discrete
+  scrolling, auto jump, view bobbing and controller Invert Look through the
+  engine settings path. Other vanilla values remain read-only (issue 8);
+  unsupported rows say `Unavailable` and are disabled.
 - Cave and minecart sound switches work and persist in `config/legacy/audio.json`.
   Legacy elytra audio caps instance volume at 0.8 and fixes pitch at 1.0, matching
   `ElytraOnPlayerSoundInstanceMixin`. `legacy_elytra_sound: false` in that file

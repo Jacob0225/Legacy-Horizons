@@ -17,6 +17,7 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 mod audio;
+mod client_options;
 mod controller;
 mod credits;
 #[cfg(test)]
@@ -30,6 +31,8 @@ mod potion_math;
 
 static QUIT_REQUESTED: AtomicBool = AtomicBool::new(false);
 
+pub use client_options::take as take_client_option_change;
+
 /// Consumed by the native event-loop mixin; follows Horizon's normal shutdown path.
 pub fn take_quit_request() -> bool {
     QUIT_REQUESTED.swap(false, Ordering::Relaxed)
@@ -37,7 +40,9 @@ pub fn take_quit_request() -> bool {
 
 pub use controller::{
     input_active as legacy_controller_input_active, local_server as legacy_controller_local_server,
-    look as legacy_controller_look, set_input as legacy_controller_set_input,
+    look as legacy_controller_look, report_inverted_look as legacy_controller_report_inverted_look,
+    set_input as legacy_controller_set_input,
+    take_invert_request as legacy_controller_take_invert_request,
     vector as legacy_controller_vector,
 };
 pub use controller::{
@@ -758,8 +763,10 @@ fn draw_option_page(
         let rect = option_button_rect(size, visible_index);
         let highlighted = contains(rect, event.screen.mouse) || index == keyboard_focus;
         let label = option_label(host, page, index, labels[index], audio, interface);
-        let enabled =
-            (page == PAGE_AUDIO && index >= 2) || interface_setting(page, index).is_some();
+        let enabled = (page == PAGE_AUDIO && index >= 2)
+            || (page == PAGE_CONTROLLER && index == 3)
+            || vanilla_bool_setting(host, page, index).is_some()
+            || interface_setting(page, index).is_some();
         let _ = event
             .draw
             .widget_button(rect, &Text::literal(label), enabled, highlighted);
@@ -784,6 +791,22 @@ fn draw_option_page(
 
 fn on_off(on: bool) -> &'static str {
     if on { "ON" } else { "OFF" }
+}
+
+fn vanilla_bool_setting(
+    host: &dyn ClientHost,
+    page: usize,
+    index: usize,
+) -> Option<(&'static str, bool)> {
+    let input = host.input_options();
+    Some(match (page, index) {
+        (PAGE_MOUSE_SETTINGS, 2) => ("invertXMouse", input.invert_x),
+        (PAGE_MOUSE_SETTINGS, 3) => ("invertYMouse", input.invert_y),
+        (PAGE_MOUSE_SETTINGS, 8) => ("discrete_mouse_scroll", input.discrete_scroll),
+        (PAGE_GAME_OPTIONS, 0) => ("autoJump", input.auto_jump),
+        (PAGE_GAME_OPTIONS, 1) => ("bobView", host.graphics_options().view_bobbing),
+        _ => return None,
+    })
 }
 
 fn interface_setting(page: usize, index: usize) -> Option<interface::Setting> {
@@ -816,6 +839,7 @@ fn option_label(
         );
     }
     let value = match (page, index) {
+        (PAGE_CONTROLLER, 3) => Some(on_off(controller::inverted_look()).into()),
         (PAGE_CONTROLLER, 5) => Some("25%".into()),
         (PAGE_CONTROLLER, 6) => Some("34%".into()),
         (PAGE_MOUSE_SETTINGS, 0) | (PAGE_GAME_OPTIONS, 7) => {
@@ -1963,6 +1987,12 @@ impl Hooks for LegacyHorizon {
             if let Some(setting) = interface_setting(page, index) {
                 self.interface.toggle(setting);
             }
+            if page == PAGE_CONTROLLER && index == 3 {
+                controller::request_invert_look();
+            }
+            if let Some((key, value)) = vanilla_bool_setting(host, page, index) {
+                client_options::toggle(key, value);
+            }
             if page == PAGE_EXIT && index == 1 {
                 QUIT_REQUESTED.store(true, Ordering::Relaxed);
                 return Flow::Cancel;
@@ -2195,6 +2225,16 @@ impl Hooks for LegacyHorizon {
             "key.keyboard.up" => Some(current.checked_sub(1).unwrap_or(count - 1)),
             "key.keyboard.down" => Some((current + 1) % count),
             "key.keyboard.enter" | "key.keyboard.keypad.enter" => {
+                if let Some((key, value)) = vanilla_bool_setting(host, page, current) {
+                    client_options::toggle(key, value);
+                    play_button_sound(host);
+                    return Flow::Cancel;
+                }
+                if page == PAGE_CONTROLLER && current == 3 {
+                    controller::request_invert_look();
+                    play_button_sound(host);
+                    return Flow::Cancel;
+                }
                 if let Some(setting) = interface_setting(page, current) {
                     self.interface.toggle(setting);
                     play_button_sound(host);
