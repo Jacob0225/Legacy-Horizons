@@ -13,8 +13,9 @@ without white/gray cards, borders or dark group backings.
 
 Use Horizon's native mod tooling to provision the SDK selected by
 `horizon-mod.toml`. The current target is Minecraft 26.3, Horizon commit
-`5ef7734fdd854add5efd6817178be3c988d8d050` (Nightly 2026-11-19 · 5ef7734),
-Mod API 0.2. Earlier validation used `0b14f8a`, a Nov 18 build replaced the
+`8f83e5c85ae3b9a117f742e8d91170c5c9080a06` (Nightly 2026-11-21 · 8f83e5c),
+Mod API 0.2. The previous target was `5ef7734` (Nightly 2026-11-19), and
+earlier validation used `0b14f8a`, a Nov 18 build replaced the
 same day by `dd67b76`, which new launchers may no longer be able to install
 (horizon-rust/horizon#18598).
 
