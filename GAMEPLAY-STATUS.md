@@ -15,8 +15,13 @@ replacement targets (`idle`, `pad_move`, `pad_look`, `modify_input`,
 `5ef7734`. `Cargo.lock` follows the 5ef7734 SDK (its internal tool crates are
 gone) and the game's own `libc`, `log` and `zerocopy` versions.
 
-Not yet checked: a launcher native build and in-game run on 5ef7734. The
-validation builds below are all from `0b14f8a`.
+Launcher check on Windows (launcher `native-build`, prebuilt route): build
+`native-5ef7734-7ef6e0a4ce09` passed with `left_out: []`, together with five
+other native mods. Its `legacy` digest `5af8ba5c…` is the launcher's content
+digest of the tested package, recomputed from the file. The tester reports
+the Legacy title screen and menus in game. Not yet re-verified on 5ef7734:
+controller curves and navigation, the six saved settings, mob caps, audio
+and credits; the validation builds below are all from `0b14f8a`.
 
 ## Previous target
 
