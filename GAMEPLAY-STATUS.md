@@ -1,5 +1,25 @@
 # Gameplay port status — 2026-11-20
 
+## PR integration and local launcher instance (2026-11-21)
+
+PRs 1–4 were reviewed as a stack, built/tested on Linux, and merged in order
+with exact-head guards. Merge `331a14d` matches the reviewed `7157778` tree.
+35 standalone tests passed in the isolated SDK checkout (temporary development
+lock expansion; the native package lock was restored). Native package builds
+passed with the committed registry lock. The permanent main checkout installed
+`native-f037744-7009c0f7c971` into **Legacy Horizons - PR Test**.
+
+MCP verified the HUD's hotbar/items/counts, armor, health, food and XP; virtual
+gamepad Resume, Exit confirmation, Cancel/back and final leave-to-title; and
+world persistence after reopening through the launcher (position, XP and mode).
+Physical-controller and multiplayer verification remain unfinished. The
+disabled pause destinations remain disabled. Screenshot evidence is in
+`gameplay-merged-pr-hud.png` and `gui-merged-pr-pause.png`.
+
+The selected local instance includes a separate **Legacy Horizons Demo** world
+with a safe platform, workstations and equipment. See [TESTING.md](TESTING.md)
+for the launcher steps; it does not include or alter existing player worlds.
+
 ## Target moved to f037744 (2026-11-21)
 
 `horizon-mod.toml` now pins Horizon `f037744a79f9982c47876f49c5a3067279f88706`

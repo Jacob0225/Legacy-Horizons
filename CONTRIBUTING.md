@@ -27,6 +27,10 @@ cargo test --locked
 horizon-launcher native-build --instance YOUR_TEST_INSTANCE .
 ```
 
+See [TESTING.md](TESTING.md) for the ready-made local instance and the isolated
+full-source SDK/lockfile procedure if standalone tests reject the native
+package's registry-only lock with `--locked`. Keep that package lock intact.
+
 Use a disposable instance/world for testing. Do not commit `.horizon`, `target`,
 account data, game files, local worlds, tokens, or machine-specific settings.
 

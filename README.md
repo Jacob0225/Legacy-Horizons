@@ -2,6 +2,11 @@
 
 A Horizon-native port of Legacy4J, with GUI parity as the first milestone.
 
+The merged PR build is ready locally as **Legacy Horizons - PR Test** in
+Horizon Launcher. Use the launcher's **Worlds → Legacy Horizons Demo → Play**
+to try the HUD and pause menu, or **Play** for the title menus.
+See [TESTING.md](TESTING.md) for the setup, checks and known limitations.
+
 ## For Claude and other contributors
 
 Read [AGENT-README.md](AGENT-README.md) before continuing the port. It records
@@ -220,14 +225,14 @@ and table-only crafting scope while working through this list.
 ### 2. Pause Menu
 
 - [~] Legacy pause menu layout — Source column, labels and disabled rows tested; Leaderboards/Advancements/Save destinations missing.
-- [x] Resume Game button — Mouse and keyboard tested; closes as Escape does.
+- [x] Resume Game button — Mouse/keyboard and Linux MCP virtual gamepad tested; closes as Escape does.
 - [!] Help & Options button — Disabled: no pinned way to open owned/built-in pages over the pause screen.
 - [!] Settings access — Reached through Help & Options; same boundary.
 - [ ] Player list
 - [ ] Multiplayer options
 - [~] Exit and Save functionality — Exit confirmation, leave-to-title and the saved world tested; Save Game is disabled.
 - [~] Legacy pause screen background — Stock menu blur only; Legacy4J's default background not compared.
-- [~] Controller navigation — Gamepad buttons are routed to the Legacy menu on the pause screen; not tested with a controller.
+- [x] Controller navigation — Linux MCP virtual gamepad verified Resume, Exit, Cancel/back and confirmation; physical hardware remains untested.
 
 ### 3. HUD
 
