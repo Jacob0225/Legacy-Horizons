@@ -19,7 +19,8 @@ Launcher check on Windows (launcher `native-build`, prebuilt route): build
 `native-5ef7734-7ef6e0a4ce09` passed with `left_out: []`, together with five
 other native mods. Its `legacy` digest `5af8ba5c…` is the launcher's content
 digest of the tested package, recomputed from the file. The tester reports
-the Legacy title screen and menus in game. Not yet re-verified on 5ef7734:
+the Legacy title screen and menus in game; capture:
+`gui-title-5ef7734.png` (Windows, 1919×1150 window, Rust Edition subtitle kept). Not yet re-verified on 5ef7734:
 controller curves and navigation, the six saved settings, mob caps, audio
 and credits; the validation builds below are all from `0b14f8a`.
 
