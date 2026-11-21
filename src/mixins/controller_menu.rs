@@ -1,5 +1,5 @@
 fn legacy_menu_button(game: &Game<'_>, button: Button, down: bool) -> ::core::ops::ControlFlow<Result<()>> {
-    if game.title.is_some() && game.screen != Screen::Options && legacy_horizon::legacy_title_controller_active() {
+    if ((game.title.is_some() && game.screen != Screen::Options) || game.screen == Screen::Paused) && legacy_horizon::legacy_title_controller_active() {
         if down {
             let key = match button {
                 Button::South => Some("key.keyboard.enter"),
