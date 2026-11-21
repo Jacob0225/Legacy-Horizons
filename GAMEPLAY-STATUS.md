@@ -1,5 +1,31 @@
 # Gameplay port status — 2026-11-20
 
+## Target moved to 5ef7734 (2026-11-21)
+
+`horizon-mod.toml` now pins Horizon `5ef7734fdd854add5efd6817178be3c988d8d050`
+(Nightly 2026-11-19 · 5ef7734); horizon-mixins stays at `e59da90`. The old pin,
+`0b14f8a`, was a Nov 18 build replaced the same day by `dd67b76` (the published
+`nightly-2026-11-18`), and a Nightly superseded the same day may no longer be
+installable on new launchers (horizon-rust/horizon#18598).
+
+Checked so far: the package builds with `cargo horizon-mod build` against the
+5ef7734 SDK, `cargo test --locked` passes (23 tests), and the six native
+replacement targets (`idle`, `pad_move`, `pad_look`, `modify_input`,
+`pad_menu_button`, `pad_step`) have bodies identical between `dd67b76` and
+`5ef7734`. `Cargo.lock` follows the 5ef7734 SDK (its internal tool crates are
+gone) and the game's own `libc`, `log` and `zerocopy` versions.
+
+Launcher check on Windows (launcher `native-build`, prebuilt route): build
+`native-5ef7734-7ef6e0a4ce09` passed with `left_out: []`, together with five
+other native mods. Its `legacy` digest `5af8ba5c…` is the launcher's content
+digest of the tested package, recomputed from the file. The tester reports
+the Legacy title screen and menus in game; capture:
+`gui-title-5ef7734.png` (Windows, 1919×1150 window, Rust Edition subtitle kept). Not yet re-verified on 5ef7734:
+controller curves and navigation, the six saved settings, mob caps, audio
+and credits; the validation builds below are all from `0b14f8a`.
+
+## Previous target
+
 Target: Minecraft 26.3, Horizon `0b14f8a`, Mod API 0.2.
 Gameplay/census validation build: `native-0b14f8a-b13f98955780`.
 Native settings adapter validation build: `native-0b14f8a-21f10fddf2f7`.
