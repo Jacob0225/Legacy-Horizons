@@ -231,11 +231,11 @@ and table-only crafting scope while working through this list.
 
 ### 3. HUD
 
-- [~] Legacy HUD layout — Hotbar, health/armor/food rows and XP bar at Legacy4J's scale and distance; opacity and tooltips remain.
+- [~] Legacy HUD layout — Hotbar, health/armor/food rows, XP bar, mount hearts, effects and boss bars placed as Legacy4J does; tooltips and Legacy art remain.
 - [x] Legacy hotbar positioning — Scaled about the bottom centre and raised; items, counts and 3D blocks tested.
-- [~] HUD scaling — Default HUD size (1.5×) only; no size setting or SD/FHD modes.
-- [ ] HUD opacity adjustment
-- [~] HUD distance from screen bottom — Default distance only; the control-tooltip gap is left out (API 06).
+- [~] HUD scaling — HUD Size 1–3 (1×, 1.5×, 2×) tested; Legacy4J's SD/FHD UI modes not ported.
+- [x] HUD opacity adjustment — Interface Opacity with Legacy4J's 0.8 hold and fade after a slot change; tested.
+- [~] HUD distance from screen bottom — Interface Distance 0–100% tested; the control-tooltip gap is left out (API 06).
 - [~] Legacy health display — Stock hearts at Legacy4J's scale and position.
 - [~] Legacy hunger display — Stock food row at Legacy4J's scale and position.
 - [~] Legacy armor display — Stock armor row at Legacy4J's scale and position.
@@ -247,7 +247,7 @@ and table-only crafting scope while working through this list.
 - [!] Paper doll animations — Depends on the missing GUI player-preview surface, API 05.
 - [ ] Auto-save indicator
 - [!] Controller action prompts — Active input glyph drawing: API 06.
-- [ ] Legacy-style status effects display
+- [~] Legacy-style status effects display — Icons at Legacy4J's places and opacity; its panel art can't be drawn (API 01).
 
 ### 4. Inventory
 
@@ -369,8 +369,8 @@ and table-only crafting scope while working through this list.
 - [~] User interface options — HUD/hand/message switches work; scaling, opacity and other controls remain.
 - [~] Sensitivity settings — Live values are read; custom writable sliders remain unfinished.
 - [x] Invert camera settings — Mouse X/Y and controller Invert Look applied, saved and verified after restart.
-- [ ] HUD scaling settings
-- [ ] HUD opacity settings
+- [x] HUD scaling settings — User Interface › HUD Size steps 1–3 and saves; tested.
+- [x] HUD opacity settings — User Interface › HUD Opacity steps 0–100% and saves; tested.
 - [ ] Gamma settings
 - [ ] Terrain fog settings
 - [ ] Difficulty settings

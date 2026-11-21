@@ -1,8 +1,10 @@
-fn legacy_hud_end(batch: &mut HudBatch) {
+fn legacy_hud_end(game: &Game<'_>, batch: &mut HudBatch) {
     let Some((vertices, blends)) = legacy_horizon::legacy_hud_end() else { return };
     let (size, scale) = ([batch.width, batch.height], batch.scale.max(f32::EPSILON));
+    let alpha = legacy_horizon::legacy_hud_alpha(game.selected as usize);
     for v in batch.vertices.iter_mut().skip(vertices) {
         v.pos = legacy_horizon::legacy_hud_point(size, v.pos);
+        v.color = legacy_horizon::legacy_hud_fade(v.color, alpha);
     }
     for (_, blend) in batch.blends.iter_mut().skip(blends) {
         if let horizon_client::hud::Blend::Depth(clip) | horizon_client::hud::Blend::DepthGlint(clip) = blend {

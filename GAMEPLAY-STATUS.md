@@ -49,10 +49,30 @@ Tested on Windows, Nightly 5ef7734, by the agent through the launcher's MCP
 (`claude-test` instance, survival and creative): hotbar, selection, item
 counts, a 3D grass block, torches and a sword; hearts, food, armor and the XP
 level; the selected item name above the rows; chat lines clear of the HUD.
-Capture: `gameplay-legacy-hud.png`. Not done: HUD opacity (0.8 with Legacy4J's
-fade on slot change), a HUD size/distance setting, SD/FHD UI modes, mount
-hearts and jump bar, the boss bar and effects positions, and Legacy4J's
-in-game tooltips. Not tested: a controller, or hunger/poison/absorption rows.
+Capture: `gameplay-legacy-hud.png`.
+
+Follow-up, same day: the three User Interface settings Legacy4J has for the HUD
+now work and save to `config/legacy/hud.json`: HUD Size (1–3, `getHUDScale`
+1×/1.5×/2×), HUD Opacity (0–100%, default 80%) and a new Interface Distance row
+(0–100%, default 100%), each stepped by click or Enter. The moved layers are drawn
+at `getHUDOpacity`: at 80% or less the HUD holds 0.8 for 3.6 s after the hotbar
+selection changes, then fades to the setting. The mount's hearts
+(`draw_mount_hud`) move with the rows; the jump bar is part of the contextual
+layer already. The effect icons take `renderGuiEffects`' places (24 apart from
+`width - 55`, rows at 18 and 42) through the same mixin route, and boss bars
+start at `12 + 16 × distance` through `customize_boss_event_progress`. The item
+name moves with its own stock line (59 up), so it stays above the armor row at
+every size.
+
+Tested through the MCP: sizes 3 → 1 wrap, 30% and 40% opacity (loaded from and
+saved to the config file), the 0.8 hold after a slot change, 50% distance, a
+tamed horse's hearts, Speed/Night Vision/Slowness icons, a `/bossbar`, and the
+item name over the armor row at size 3. Not done: Legacy4J's SD/FHD UI modes, its
+own boss-bar and effect-panel art (API 01), and its in-game control tooltips,
+which need Horizon's input glyphs (API 06, horizon-rust/horizon#18396, open).
+A newly given effect's fly-in animation passes through the icon remap and can
+show away from the icons for a moment. Not tested: a controller, or
+hunger/poison/absorption rows.
 
 Container screens (chest, furnace family, brewing, anvil, trading…) stay stock:
 Legacy4J moves their slots, and the pinned API still can't move live slots or
