@@ -24,6 +24,7 @@ mod credits;
 mod flight_math;
 mod interface;
 mod mobcaps;
+mod pause_menu;
 mod play_menu;
 #[cfg(test)]
 #[allow(dead_code)]
@@ -394,6 +395,7 @@ pub struct LegacyHorizon {
     audio: audio::Options,
     interface: interface::Options,
     mobcaps: mobcaps::Policy,
+    pause: pause_menu::PauseMenu,
 }
 
 fn menu_button_rects<const N: usize>(size: [f32; 2]) -> [[f32; 4]; N] {
@@ -1694,6 +1696,15 @@ impl Hooks for LegacyHorizon {
     }
 
     fn client_tick_pre(&self, host: &mut dyn ClientHost, _: &mut ClientTickPreEvent) {
+        self.pause.tick(host);
+        match host.observed_screen_id() {
+            None => {
+                self.pause.reset();
+                controller::set_title_active(false);
+            }
+            Some(screen) if screen.id != pause_menu::SCREEN => self.pause.reset(),
+            Some(_) => {}
+        }
         self.audio.sync(host);
         self.interface.sync(host);
         let request = self.crafting_request.swap(0, Ordering::Relaxed);
@@ -1793,9 +1804,9 @@ impl Hooks for LegacyHorizon {
     }
 
     fn screen_render_pre(&self, _: &dyn ClientHost, event: &mut ScreenRenderPreEvent<'_>) -> Flow {
-        if event.screen.id == TITLE_SCREEN {
-            // The title's normal drawing is replaced, then screen_render_post
-            // paints the Legacy4J title. Toasts remain above it as intended.
+        if event.screen.id == TITLE_SCREEN || event.screen.id == pause_menu::SCREEN {
+            // The title's and the pause menu's normal drawing is replaced, then
+            // screen_render_post paints Legacy4J's. Toasts remain above it as intended.
             Flow::Cancel
         } else {
             Flow::Continue
@@ -1803,8 +1814,10 @@ impl Hooks for LegacyHorizon {
     }
 
     fn screen_render_post(&self, host: &dyn ClientHost, event: &mut ScreenRenderPostEvent<'_>) {
-        controller::set_title_active(event.screen.id == TITLE_SCREEN);
-        if event.screen.id == TITLE_SCREEN {
+        controller::set_title_active(
+            event.screen.id == TITLE_SCREEN || event.screen.id == pause_menu::SCREEN,
+        );
+        if event.screen.id == TITLE_SCREEN || event.screen.id == pause_menu::SCREEN {
             while let Some(key) = controller::take_menu_key() {
                 let mut input = ScreenKeyPressedPreEvent {
                     screen: event.screen,
@@ -1846,6 +1859,8 @@ impl Hooks for LegacyHorizon {
                     .draw
                     .text("< Back", [16.0, size[1] - 18.0], 0xFFFF_FFFF, true);
             }
+        } else if event.screen.id == pause_menu::SCREEN {
+            self.pause.draw(host, event);
         } else if event.screen.id == "inventory" && event.screen.menu == Some("minecraft:crafting")
         {
             draw_crafting_menu(
@@ -1864,6 +1879,9 @@ impl Hooks for LegacyHorizon {
         host: &dyn ClientHost,
         event: &mut ScreenMouseButtonPressedPreEvent<'_>,
     ) -> Flow {
+        if event.screen.id == pause_menu::SCREEN {
+            return self.pause.mouse_pressed(host, event);
+        }
         if event.button != 0 {
             return Flow::Continue;
         }
@@ -2087,6 +2105,9 @@ impl Hooks for LegacyHorizon {
         host: &dyn ClientHost,
         event: &mut ScreenKeyPressedPreEvent<'_>,
     ) -> Flow {
+        if event.screen.id == pause_menu::SCREEN {
+            return self.pause.key_pressed(host, event);
+        }
         if event.screen.id == "inventory" && !crafting_browser_fits(event.screen.rect[0]) {
             return Flow::Continue;
         }

@@ -24,6 +24,30 @@ the Legacy title screen and menus in game; capture:
 controller curves and navigation, the six saved settings, mob caps, audio
 and credits; the validation builds below are all from `0b14f8a`.
 
+## Legacy pause menu (2026-11-21)
+
+`src/pause_menu.rs` replaces the stock pause screen's drawing and buttons with
+Legacy4J's column (`PauseScreenMixin`): 225×20 buttons, 5 apart, from
+`width / 2 - 112`, `height / 3 + 5`. Resume Game closes the screen as Escape
+does (queued to `client_tick_pre`, which runs while paused). Exit Game opens a
+confirmation (Cancel / Exit Game, `legacy.menu.server_exit_message`) and then
+calls `disconnect(None)`, which leaves as the stock Disconnect does and saves a
+single-player world first. Help & Options, Leaderboards, Advancements and Save
+Game are drawn disabled: `mod_screen_open` refuses while another screen is open
+and the pinned API opens no stats, advancements or save screen. Every click on
+the pause screen is consumed, and Tab/Left/Right are swallowed, so an undrawn
+stock button can't run. The controller menu mixins also route the gamepad to
+the Legacy menu on `Screen::Paused`.
+
+Tested on Windows, Nightly 5ef7734, a single-player world started from the
+launcher's Worlds → Play (the Legacy title has no world list yet, APIs 02–03):
+the column draws as in `gui-pause-menu.png`; Resume Game returns to the game;
+arrow keys move focus between Resume Game and Exit Game only and Enter
+activates; Exit Game → Cancel returns to the list; Exit Game → Exit Game
+lands on the title screen, and reopening the world from the launcher found it
+saved where it was left. Not tested: a gamepad and a multiplayer server. 28
+local tests pass.
+
 ## Previous target
 
 Target: Minecraft 26.3, Horizon `0b14f8a`, Mod API 0.2.
