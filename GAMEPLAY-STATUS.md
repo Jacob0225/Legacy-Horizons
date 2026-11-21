@@ -24,6 +24,61 @@ the Legacy title screen and menus in game; capture:
 controller curves and navigation, the six saved settings, mob caps, audio
 and credits; the validation builds below are all from `0b14f8a`.
 
+## Legacy HUD placement (2026-11-21)
+
+`src/hud.rs` and the `legacy_hud_*` mixins give the in-game HUD Legacy4J's
+placement (`LegacyGuiElements.setup`, `prepareHUDRender`) at its defaults:
+the hotbar, the health/armor/food/air rows and the experience bar are scaled
+1.5× about the bottom centre (`getHUDScale`, HUD size 2) and raised 22.4 GUI
+pixels (`getHUDDistance` at distance 1.0; the 17.6 added for in-game control
+tooltips is left out because those prompts can't be drawn, API 06). The
+selected item name and the action bar keep their size and rise by as much as
+the health rows' top (41.9), keeping their stock gap. The unfocused chat moves
+in by 29 and up by 64 (`ChatComponentMixin`) through `customize_chat_overlay`;
+the open chat stays put because its input box can't be moved.
+
+Route: a pose pushed in `gui_layer_pre` does not reach the stock layer, since
+Horizon bakes each layer straight into HUD vertices, and the patch tool refuses
+sites inside the layers' closures (`E_UNSUPPORTED_SITE`). So `BEFORE_CALL` and
+`AFTER_CALL` mixins on `Game::hud_layers` sit around its `self.gui_layer` calls
+(ordinals 1, 4, 5, 6 and 8 of 15) and transform the vertices, and the clip
+rectangles of 3D item runs, that each of those layers added. Mods' own layers
+drawn in those calls move with them.
+
+Tested on Windows, Nightly 5ef7734, by the agent through the launcher's MCP
+(`claude-test` instance, survival and creative): hotbar, selection, item
+counts, a 3D grass block, torches and a sword; hearts, food, armor and the XP
+level; the selected item name above the rows; chat lines clear of the HUD.
+Capture: `gameplay-legacy-hud.png`.
+
+Follow-up, same day: the three User Interface settings Legacy4J has for the HUD
+now work and save to `config/legacy/hud.json`: HUD Size (1–3, `getHUDScale`
+1×/1.5×/2×), HUD Opacity (0–100%, default 80%) and a new Interface Distance row
+(0–100%, default 100%), each stepped by click or Enter. The moved layers are drawn
+at `getHUDOpacity`: at 80% or less the HUD holds 0.8 for 3.6 s after the hotbar
+selection changes, then fades to the setting. The mount's hearts
+(`draw_mount_hud`) move with the rows; the jump bar is part of the contextual
+layer already. The effect icons take `renderGuiEffects`' places (24 apart from
+`width - 55`, rows at 18 and 42) through the same mixin route, and boss bars
+start at `12 + 16 × distance` through `customize_boss_event_progress`. The item
+name moves with its own stock line (59 up), so it stays above the armor row at
+every size.
+
+Tested through the MCP: sizes 3 → 1 wrap, 30% and 40% opacity (loaded from and
+saved to the config file), the 0.8 hold after a slot change, 50% distance, a
+tamed horse's hearts, Speed/Night Vision/Slowness icons, a `/bossbar`, and the
+item name over the armor row at size 3. Not done: Legacy4J's SD/FHD UI modes, its
+own boss-bar and effect-panel art (API 01), and its in-game control tooltips,
+which need Horizon's input glyphs (API 06, horizon-rust/horizon#18396, open).
+A newly given effect's fly-in animation passes through the icon remap and can
+show away from the icons for a moment. Not tested: a controller, or
+hunger/poison/absorption rows.
+
+Container screens (chest, furnace family, brewing, anvil, trading…) stay stock:
+Legacy4J moves their slots, and the pinned API still can't move live slots or
+their hitboxes (API 07, horizon-rust/horizon#18397, open). The checklist marks
+them `[!]`.
+
 ## Legacy pause menu (2026-11-21)
 
 `src/pause_menu.rs` replaces the stock pause screen's drawing and buttons with

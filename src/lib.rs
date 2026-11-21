@@ -22,6 +22,7 @@ mod controller;
 mod credits;
 #[cfg(test)]
 mod flight_math;
+mod hud;
 mod interface;
 mod mobcaps;
 mod pause_menu;
@@ -33,6 +34,12 @@ mod potion_math;
 static QUIT_REQUESTED: AtomicBool = AtomicBool::new(false);
 
 pub use client_options::take as take_client_option_change;
+
+pub use hud::{
+    alpha as legacy_hud_alpha, begin as legacy_hud_begin, effect_point as legacy_hud_effect_point,
+    end as legacy_hud_end, fade as legacy_hud_fade, lift as legacy_hud_lift,
+    point as legacy_hud_point,
+};
 
 /// Consumed by the native event-loop mixin; follows Horizon's normal shutdown path.
 pub fn take_quit_request() -> bool {
@@ -202,7 +209,7 @@ const GRAPHICS_OPTIONS: [&str; 4] = [
     "Legacy Gamma: 50%",
     "Graphics Preset: Default",
 ];
-const USER_INTERFACE_OPTIONS: [&str; 12] = [
+const USER_INTERFACE_OPTIONS: [&str; 13] = [
     "Display HUD: ON",
     "Display Hand: ON",
     "Display Game Messages: ON",
@@ -214,6 +221,7 @@ const USER_INTERFACE_OPTIONS: [&str; 12] = [
     "Online IDs: ON",
     "Classic Crafting: ON",
     "HUD Size: Default",
+    "Interface Distance: 100%",
     "Advanced Options",
 ];
 const RESET_SETTINGS_BUTTONS: [&str; 2] = ["Cancel", "Reset to Defaults"];
@@ -752,7 +760,8 @@ fn draw_option_page(
         let enabled = (page == PAGE_AUDIO && index >= 2)
             || (page == PAGE_CONTROLLER && index == 3)
             || vanilla_bool_setting(host, page, index).is_some()
-            || interface_setting(page, index).is_some();
+            || interface_setting(page, index).is_some()
+            || (page == PAGE_USER_INTERFACE && hud::label(index).is_some());
         let _ = event
             .draw
             .widget_button(rect, &Text::literal(label), enabled, highlighted);
@@ -825,6 +834,7 @@ fn option_label(
         );
     }
     let value = match (page, index) {
+        (PAGE_USER_INTERFACE, row) if hud::label(row).is_some() => hud::label(row),
         (PAGE_CONTROLLER, 3) => Some(on_off(controller::inverted_look()).into()),
         (PAGE_CONTROLLER, 5) => Some("25%".into()),
         (PAGE_CONTROLLER, 6) => Some("34%".into()),
@@ -1657,6 +1667,28 @@ impl Hooks for LegacyHorizon {
         self.mobcaps.clear();
         controller::set_server(false);
     }
+    fn customize_boss_event_progress(
+        &self,
+        _: &dyn ClientHost,
+        event: &mut mod_api::CustomizeBossEventProgressEvent<'_>,
+    ) -> Flow {
+        event.y += hud::boss_bar_drop();
+        Flow::Continue
+    }
+
+    fn customize_chat_overlay(
+        &self,
+        _: &mut dyn ClientHost,
+        event: &mut mod_api::CustomizeChatOverlayEvent,
+    ) {
+        // The open chat's input box stays put, so its lines do too.
+        if !event.focused {
+            let [x, y] = hud::chat_offset();
+            event.x += x;
+            event.y += y;
+        }
+    }
+
     fn render_gui_pre(&self, _: &dyn ClientHost, _: &mut mod_api::RenderGuiPreEvent) -> Flow {
         if self.interface.enabled(interface::Setting::Hud) {
             Flow::Continue
@@ -1707,6 +1739,7 @@ impl Hooks for LegacyHorizon {
         }
         self.audio.sync(host);
         self.interface.sync(host);
+        hud::sync(host);
         let request = self.crafting_request.swap(0, Ordering::Relaxed);
         if request == 0 {
             return;
@@ -1831,6 +1864,7 @@ impl Hooks for LegacyHorizon {
         }
         self.audio.sync(host);
         self.interface.sync(host);
+        hud::sync(host);
         if event.screen.id == TITLE_SCREEN {
             if self.page.load(Ordering::Relaxed) == PAGE_CREDITS_ROLL {
                 credits::draw(
@@ -1988,6 +2022,9 @@ impl Hooks for LegacyHorizon {
             }
             if let Some(setting) = interface_setting(page, index) {
                 self.interface.toggle(setting);
+            }
+            if page == PAGE_USER_INTERFACE {
+                hud::step(index);
             }
             if page == PAGE_CONTROLLER && index == 3 {
                 controller::request_invert_look();
@@ -2242,6 +2279,10 @@ impl Hooks for LegacyHorizon {
                 }
                 if let Some(setting) = interface_setting(page, current) {
                     self.interface.toggle(setting);
+                    play_button_sound(host);
+                    return Flow::Cancel;
+                }
+                if page == PAGE_USER_INTERFACE && hud::step(current) {
                     play_button_sound(host);
                     return Flow::Cancel;
                 }
