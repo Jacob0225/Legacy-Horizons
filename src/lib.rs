@@ -22,6 +22,7 @@ mod controller;
 mod credits;
 #[cfg(test)]
 mod flight_math;
+mod hud;
 mod interface;
 mod mobcaps;
 mod pause_menu;
@@ -33,6 +34,11 @@ mod potion_math;
 static QUIT_REQUESTED: AtomicBool = AtomicBool::new(false);
 
 pub use client_options::take as take_client_option_change;
+
+pub use hud::{
+    begin as legacy_hud_begin, end as legacy_hud_end, lift as legacy_hud_lift,
+    point as legacy_hud_point,
+};
 
 /// Consumed by the native event-loop mixin; follows Horizon's normal shutdown path.
 pub fn take_quit_request() -> bool {
@@ -1657,6 +1663,19 @@ impl Hooks for LegacyHorizon {
         self.mobcaps.clear();
         controller::set_server(false);
     }
+    fn customize_chat_overlay(
+        &self,
+        _: &mut dyn ClientHost,
+        event: &mut mod_api::CustomizeChatOverlayEvent,
+    ) {
+        // The open chat's input box stays put, so its lines do too.
+        if !event.focused {
+            let [x, y] = hud::chat_offset();
+            event.x += x;
+            event.y += y;
+        }
+    }
+
     fn render_gui_pre(&self, _: &dyn ClientHost, _: &mut mod_api::RenderGuiPreEvent) -> Flow {
         if self.interface.enabled(interface::Setting::Hud) {
             Flow::Continue

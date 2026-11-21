@@ -231,18 +231,18 @@ and table-only crafting scope while working through this list.
 
 ### 3. HUD
 
-- [ ] Legacy HUD layout
-- [ ] Legacy hotbar positioning
-- [ ] HUD scaling
+- [~] Legacy HUD layout — Hotbar, health/armor/food rows and XP bar at Legacy4J's scale and distance; opacity and tooltips remain.
+- [x] Legacy hotbar positioning — Scaled about the bottom centre and raised; items, counts and 3D blocks tested.
+- [~] HUD scaling — Default HUD size (1.5×) only; no size setting or SD/FHD modes.
 - [ ] HUD opacity adjustment
-- [ ] HUD distance from screen bottom
-- [ ] Legacy health display
-- [ ] Legacy hunger display
-- [ ] Legacy armor display
-- [ ] Legacy experience bar
+- [~] HUD distance from screen bottom — Default distance only; the control-tooltip gap is left out (API 06).
+- [~] Legacy health display — Stock hearts at Legacy4J's scale and position.
+- [~] Legacy hunger display — Stock food row at Legacy4J's scale and position.
+- [~] Legacy armor display — Stock armor row at Legacy4J's scale and position.
+- [~] Legacy experience bar — Stock bar and level at Legacy4J's scale and position.
 - [ ] Legacy crosshair
 - [ ] Legacy item tooltips
-- [ ] Item name display
+- [~] Item name display — Lifted above the larger rows at its stock size; Legacy4J's tooltip lines not ported.
 - [!] Paper doll player preview — GUI player rendering: API 05.
 - [!] Paper doll animations — Depends on the missing GUI player-preview surface, API 05.
 - [ ] Auto-save indicator
@@ -285,26 +285,26 @@ and table-only crafting scope while working through this list.
 
 ### 6. Container and Utility Screens
 
-- [ ] Chest interface
-- [ ] Large chest interface
-- [ ] Furnace interface
-- [ ] Blast furnace interface
-- [ ] Smoker interface
-- [ ] Brewing stand interface
-- [ ] Enchanting table interface
-- [ ] Anvil interface
-- [ ] Smithing table interface
-- [ ] Grindstone interface
-- [ ] Stonecutter interface
-- [ ] Loom interface
-- [ ] Cartography table interface
-- [ ] Beacon interface
-- [ ] Shulker box interface
-- [ ] Hopper interface
-- [ ] Dispenser interface
-- [ ] Dropper interface
-- [ ] Villager trading interface
-- [ ] Horse inventory interface
+- [!] Chest interface — Live slot layout/hitboxes: API 07.
+- [!] Large chest interface — Live slot layout/hitboxes: API 07.
+- [!] Furnace interface — Live slot layout/hitboxes: API 07.
+- [!] Blast furnace interface — Live slot layout/hitboxes: API 07.
+- [!] Smoker interface — Live slot layout/hitboxes: API 07.
+- [!] Brewing stand interface — Live slot layout/hitboxes: API 07.
+- [!] Enchanting table interface — Live slot layout/hitboxes: API 07.
+- [!] Anvil interface — Live slot layout/hitboxes: API 07.
+- [!] Smithing table interface — Live slot layout/hitboxes: API 07.
+- [!] Grindstone interface — Live slot layout/hitboxes: API 07.
+- [!] Stonecutter interface — Live slot layout/hitboxes: API 07.
+- [!] Loom interface — Live slot layout/hitboxes: API 07.
+- [!] Cartography table interface — Live slot layout/hitboxes: API 07.
+- [!] Beacon interface — Live slot layout/hitboxes: API 07.
+- [!] Shulker box interface — Live slot layout/hitboxes: API 07.
+- [!] Hopper interface — Live slot layout/hitboxes: API 07.
+- [!] Dispenser interface — Live slot layout/hitboxes: API 07.
+- [!] Dropper interface — Live slot layout/hitboxes: API 07.
+- [!] Villager trading interface — Live slot layout/hitboxes: API 07.
+- [!] Horse inventory interface — Live slot layout/hitboxes: API 07.
 
 ### 7. Controller Support
 
