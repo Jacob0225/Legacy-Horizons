@@ -117,8 +117,8 @@ work. This project has not reached full GUI or gameplay parity.
   names, accelerated scrolling and looping. The original background and fade
   sprites are attempted; issue 1 still prevents their display in the pinned
   nightly, so its black fallback is not artwork parity.
-- Targets the installed Nov 18 Horizon nightly at `0b14f8a` and its matching
-  horizon-mixins revision.
+- Targets the Nov 19 Horizon nightly at `5ef7734` (moved from `0b14f8a`, see
+  GAMEPLAY-STATUS.md) and its matching horizon-mixins revision.
 
 Menu destinations that require Horizon-owned behavior remain safely inert.
 Clicks are consumed so an invisible stock button cannot run the wrong action.
@@ -219,15 +219,15 @@ and table-only crafting scope while working through this list.
 
 ### 2. Pause Menu
 
-- [ ] Legacy pause menu layout
-- [ ] Resume Game button
-- [ ] Help & Options button
-- [ ] Settings access
+- [~] Legacy pause menu layout — Source column, labels and disabled rows tested; Leaderboards/Advancements/Save destinations missing.
+- [x] Resume Game button — Mouse and keyboard tested; closes as Escape does.
+- [!] Help & Options button — Disabled: no pinned way to open owned/built-in pages over the pause screen.
+- [!] Settings access — Reached through Help & Options; same boundary.
 - [ ] Player list
 - [ ] Multiplayer options
-- [ ] Exit and Save functionality
-- [ ] Legacy pause screen background
-- [ ] Controller navigation
+- [~] Exit and Save functionality — Exit confirmation, leave-to-title and the saved world tested; Save Game is disabled.
+- [~] Legacy pause screen background — Stock menu blur only; Legacy4J's default background not compared.
+- [~] Controller navigation — Gamepad buttons are routed to the Legacy menu on the pause screen; not tested with a controller.
 
 ### 3. HUD
 
@@ -472,7 +472,7 @@ and table-only crafting scope while working through this list.
 ### 18. Final Verification
 
 - [~] Main menus match Legacy4J — Geometry/navigation slices verified; artwork/actions are incomplete.
-- [ ] Pause menu matches Legacy4J
+- [~] Pause menu matches Legacy4J — Button column verified; four destinations disabled, background not compared.
 - [ ] HUD matches Legacy4J
 - [ ] Inventory matches Legacy4J
 - [~] Crafting matches Legacy4J — Browser works; source slot layout and automatic placement are unfinished.
