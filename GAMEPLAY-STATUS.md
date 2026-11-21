@@ -1,5 +1,29 @@
 # Gameplay port status — 2026-11-20
 
+## Target moved to f037744 (2026-11-21)
+
+`horizon-mod.toml` now pins Horizon `f037744a79f9982c47876f49c5a3067279f88706`
+(Nightly 2026-11-21 · f037744), published hours after 8f83e5c; its SDK still
+names horizon-mixins `e59da90`. `Cargo.lock` needed no change, and `cargo test
+--locked` passes (35 tests) against the f037744 SDK.
+
+Launcher check on Windows: `native-build` installed `native-f037744-d0a3d5855c45`
+with all mixins accepted. In game, through the launcher's MCP: the Legacy HUD
+and the Legacy pause menu work as on 8f83e5c.
+
+## Target moved to 8f83e5c (2026-11-21)
+
+`horizon-mod.toml` now pins Horizon `8f83e5c85ae3b9a117f742e8d91170c5c9080a06`
+(Nightly 2026-11-21 · 8f83e5c), the newest Nightly; horizon-mixins stays at
+`e59da90`. `Cargo.lock` needed no change, and `cargo test --locked` passes (35
+tests) against the 8f83e5c SDK.
+
+Launcher check on Windows: `native-build` installed `native-8f83e5c-58748b755c45`
+with all mixins accepted. In game, through the launcher's MCP: the Legacy HUD
+(hotbar, health, food, armor, XP, mount hearts) and the Legacy pause menu
+(open, Resume) work as on 5ef7734. The other 5ef7734 checks below were not
+repeated.
+
 ## Target moved to 5ef7734 (2026-11-21)
 
 `horizon-mod.toml` now pins Horizon `5ef7734fdd854add5efd6817178be3c988d8d050`

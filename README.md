@@ -117,8 +117,8 @@ work. This project has not reached full GUI or gameplay parity.
   names, accelerated scrolling and looping. The original background and fade
   sprites are attempted; issue 1 still prevents their display in the pinned
   nightly, so its black fallback is not artwork parity.
-- Targets the Nov 19 Horizon nightly at `5ef7734` (moved from `0b14f8a`, see
-  GAMEPLAY-STATUS.md) and its matching horizon-mixins revision.
+- Targets the Nov 21 Horizon nightly at `f037744` (moved from `8f83e5c`,
+  `5ef7734` and `0b14f8a`; see GAMEPLAY-STATUS.md) and its matching horizon-mixins revision.
 
 Menu destinations that require Horizon-owned behavior remain safely inert.
 Clicks are consumed so an invisible stock button cannot run the wrong action.
