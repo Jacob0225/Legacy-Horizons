@@ -44,8 +44,9 @@ launcher's Worlds → Play (the Legacy title has no world list yet, APIs 02–03
 the column draws as in `gui-pause-menu.png`; Resume Game returns to the game;
 arrow keys move focus between Resume Game and Exit Game only and Enter
 activates; Exit Game → Cancel returns to the list; Exit Game → Exit Game
-lands on the title screen. Not tested: a gamepad, a multiplayer server, and
-reloading the world to confirm the save. 28 local tests pass.
+lands on the title screen, and reopening the world from the launcher found it
+saved where it was left. Not tested: a gamepad and a multiplayer server. 28
+local tests pass.
 
 ## Previous target
 

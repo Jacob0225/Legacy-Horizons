@@ -225,7 +225,7 @@ and table-only crafting scope while working through this list.
 - [!] Settings access — Reached through Help & Options; same boundary.
 - [ ] Player list
 - [ ] Multiplayer options
-- [~] Exit and Save functionality — Exit confirmation and leave-to-title tested; Save Game is disabled and Exit's save was not separately verified.
+- [~] Exit and Save functionality — Exit confirmation, leave-to-title and the saved world tested; Save Game is disabled.
 - [~] Legacy pause screen background — Stock menu blur only; Legacy4J's default background not compared.
 - [~] Controller navigation — Gamepad buttons are routed to the Legacy menu on the pause screen; not tested with a controller.
 
