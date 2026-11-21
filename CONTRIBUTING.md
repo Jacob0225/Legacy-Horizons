@@ -6,8 +6,9 @@ GUI parity implementation, not a complete playable replacement for Legacy4J.
 Start with [AGENT-README.md](AGENT-README.md) for the owner's requirements and
 the end-to-end workflow. The [issues README](github%20issues/README.md) records
 report formatting and existing upstream reports; `CLAUDE.md` points Claude to
-the same instructions. Button-list menus must remain clear over the panorama,
-without white/gray cards, borders or dark group backings.
+the same instructions. Menu backgrounds must match each corresponding
+Legacy4J reference: the owner now accepts panels where the original has them.
+The earlier blanket clear-background rule is superseded.
 
 ## Build
 
@@ -92,9 +93,11 @@ See [GAMEPLAY-STATUS.md](GAMEPLAY-STATUS.md) for evidence and remaining scope.
 
 ## Visual references
 
-The user-supplied screenshots in `references/` show the intended world/server
-menus and Legacy crafting layout. Use these alongside the upstream Legacy4J
-source for dimensions, tabs, recessed panels and ingredient grouping. Current
+The user-supplied screenshots in `Reference-Images/` cover menus, settings,
+dialogs, inventories and containers; `references/` also contains earlier
+world/server and crafting references. Read `Reference-Images/README.md` and
+the capture manifest, then compare the matching source screen for dimensions,
+tabs, panels, widgets and ingredient grouping. Current
 screenshots are progress evidence, not a claim of identical appearance.
 
 ## Upstream issues

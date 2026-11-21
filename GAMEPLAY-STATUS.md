@@ -154,7 +154,17 @@ Gameplay/census validation build: `native-0b14f8a-b13f98955780`.
 Native settings adapter validation build: `native-0b14f8a-21f10fddf2f7`.
 Final formatting-only package build: `native-0b14f8a-70df1564f13c` (passed).
 
-## Clear button-list backgrounds
+## Background requirement clarified (2026-11-21)
+
+The owner now accepts backgrounds where the actual Legacy4J menu has them.
+The earlier blanket clear-background rule is superseded. `Reference-Images/`
+contains the newly supplied reference collection and metadata; determine the
+background, widgets and arrangement per screen. Settings pages still reflect
+the prior clear treatment and have not been rebuilt to match these newly
+supplied references. This is documentation of a changed target, not a claim
+that the visual correction has already been implemented.
+
+## Earlier clear button-list background change (historical)
 
 The owner's follow-up explicitly requires transparent surroundings for
 button-list menus. Removed the light backing card and its borders from the
@@ -166,7 +176,8 @@ Native build `native-0b14f8a-ff73d7b68191` passed. Horizon MCP inspected Game
 Options widgets and captured the Game Options and Change Skin pages at
 1280×720 (GUI 640×360). Evidence: `gui-game-options-clear.png` and
 `gui-skin-options-clear.png`. These supersede the older panel-backed captures
-as the intended background treatment. The skin screen's existing static
+as evidence of the earlier requested treatment, not a blanket target after
+the clarification above. The skin screen's existing static
 scaffolding is not made functional by this paint change.
 
 ## Requested features

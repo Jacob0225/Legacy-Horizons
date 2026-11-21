@@ -11,13 +11,13 @@ in the failed translation or a Horizon engine checkout.
 - Port Legacy4J behavior and appearance, with GUI parity first. Research the
   original screen/behavior before implementing it. Source and the owner's
   supplied screenshots take precedence over guessed console conventions.
-- Button-list screens must stay clear over the panorama. Do not add a
-  white/gray card, outline or translucent dark rectangle around the group.
-  This includes settings, controls, skin-option lists and How To Play.
-  Buttons retain their own background and focus/hover appearance. World-list,
-  inventory and crafting surfaces shown in the reference screenshots are
-  distinct screen content; do not erase their source-defined layouts.
-- How To Play's index and articles have no backing background at all.
+- Backgrounds follow each corresponding Legacy4J reference screen. The
+  owner's November 21 clarification supersedes the earlier blanket ban on
+  white/gray or dark menu backings: panels are allowed where Legacy4J has
+  them. Keep clear screens clear, and preserve the buttons' own appearance.
+  Use `Reference-Images/`, its metadata and matching source to decide per
+  screen; do not apply one generic card or one generic transparent treatment
+  everywhere. How To Play must be compared against its own reference.
 - The supplied Legacy crafting layout applies to crafting-table screens.
   Do not replace personal inventory crafting with that table menu.
 - Leave the current Rust Edition subtitle unless the owner changes that
@@ -38,7 +38,9 @@ in the failed translation or a Horizon engine checkout.
    after the feature works in-game and has been tested; written code or a
    successful build alone is not completion. Prefer Horizon's modding API.
 3. Locate the corresponding code/assets in the sibling `Legacy4j/` source
-   and the supplied `references/` images. The workspace `doc/` folder and
+   and the supplied `Reference-Images/` collection (plus older `references/`
+   images). Read `Reference-Images/README.md` for capture/version details.
+   The workspace `doc/` folder and
    the exact pinned SDK docs are useful API references. Paths vary on another
    machine, so locate them instead of hardcoding this workstation's paths.
 4. `neolegacy/` may be consulted for visual/behavior ideas. Do not copy its

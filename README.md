@@ -19,11 +19,14 @@ Use the [port progress checklist](#port-progress-checklist) to track work and
 evidence. Update them after each implementation session; do not infer
 completion from the presence of a menu or experiment.
 
-Settings and other button-list pages have a clear background over the
-panorama: no white/gray card, border or dark backing behind the button group.
-The buttons themselves retain their normal texture and focus treatment.
+**Updated background requirement:** match the corresponding Legacy4J screen
+in [Reference-Images/](Reference-Images/). The owner accepts backgrounds and
+panels where the original menu has them; the earlier blanket clear-background
+rule is superseded. Keep genuinely clear screens clear. Current settings
+pages still use the earlier clear treatment and need comparison/rework against
+these references, including checkbox/slider layout rather than only backings.
 
-Current clear-background capture (disabled rows still represent unfinished work):
+Earlier clear-background progress capture (not the visual target for every menu):
 
 ![Game Options directly over the panorama](gui-game-options-clear.png)
 
@@ -197,8 +200,8 @@ the surrounding screen has full visual parity. Partial implementations stay
 on the pinned target, not a claim that every possible approach is impossible.
 API numbers refer to the local [issue ledger](github%20issues/README.md#existing-report-ledger).
 Items without recorded implementation are left `[ ]`; uncertain compatibility
-or verification is `[?]`. Preserve the owner's clear button-list backgrounds
-and table-only crafting scope while working through this list.
+or verification is `[?]`. Match each screen's reference background and preserve
+the owner's table-only crafting scope while working through this list.
 
 ### 1. Main Menu and Navigation
 
