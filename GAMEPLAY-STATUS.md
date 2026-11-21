@@ -1,5 +1,110 @@
 # Gameplay port status — 2026-11-20
 
+## Target moved to 5ef7734 (2026-11-21)
+
+`horizon-mod.toml` now pins Horizon `5ef7734fdd854add5efd6817178be3c988d8d050`
+(Nightly 2026-11-19 · 5ef7734); horizon-mixins stays at `e59da90`. The old pin,
+`0b14f8a`, was a Nov 18 build replaced the same day by `dd67b76` (the published
+`nightly-2026-11-18`), and a Nightly superseded the same day may no longer be
+installable on new launchers (horizon-rust/horizon#18598).
+
+Checked so far: the package builds with `cargo horizon-mod build` against the
+5ef7734 SDK, `cargo test --locked` passes (23 tests), and the six native
+replacement targets (`idle`, `pad_move`, `pad_look`, `modify_input`,
+`pad_menu_button`, `pad_step`) have bodies identical between `dd67b76` and
+`5ef7734`. `Cargo.lock` follows the 5ef7734 SDK (its internal tool crates are
+gone) and the game's own `libc`, `log` and `zerocopy` versions.
+
+Launcher check on Windows (launcher `native-build`, prebuilt route): build
+`native-5ef7734-7ef6e0a4ce09` passed with `left_out: []`, together with five
+other native mods. Its `legacy` digest `5af8ba5c…` is the launcher's content
+digest of the tested package, recomputed from the file. The tester reports
+the Legacy title screen and menus in game; capture:
+`gui-title-5ef7734.png` (Windows, 1919×1150 window, Rust Edition subtitle kept). Not yet re-verified on 5ef7734:
+controller curves and navigation, the six saved settings, mob caps, audio
+and credits; the validation builds below are all from `0b14f8a`.
+
+## Legacy HUD placement (2026-11-21)
+
+`src/hud.rs` and the `legacy_hud_*` mixins give the in-game HUD Legacy4J's
+placement (`LegacyGuiElements.setup`, `prepareHUDRender`) at its defaults:
+the hotbar, the health/armor/food/air rows and the experience bar are scaled
+1.5× about the bottom centre (`getHUDScale`, HUD size 2) and raised 22.4 GUI
+pixels (`getHUDDistance` at distance 1.0; the 17.6 added for in-game control
+tooltips is left out because those prompts can't be drawn, API 06). The
+selected item name and the action bar keep their size and rise by as much as
+the health rows' top (41.9), keeping their stock gap. The unfocused chat moves
+in by 29 and up by 64 (`ChatComponentMixin`) through `customize_chat_overlay`;
+the open chat stays put because its input box can't be moved.
+
+Route: a pose pushed in `gui_layer_pre` does not reach the stock layer, since
+Horizon bakes each layer straight into HUD vertices, and the patch tool refuses
+sites inside the layers' closures (`E_UNSUPPORTED_SITE`). So `BEFORE_CALL` and
+`AFTER_CALL` mixins on `Game::hud_layers` sit around its `self.gui_layer` calls
+(ordinals 1, 4, 5, 6 and 8 of 15) and transform the vertices, and the clip
+rectangles of 3D item runs, that each of those layers added. Mods' own layers
+drawn in those calls move with them.
+
+Tested on Windows, Nightly 5ef7734, by the agent through the launcher's MCP
+(`claude-test` instance, survival and creative): hotbar, selection, item
+counts, a 3D grass block, torches and a sword; hearts, food, armor and the XP
+level; the selected item name above the rows; chat lines clear of the HUD.
+Capture: `gameplay-legacy-hud.png`.
+
+Follow-up, same day: the three User Interface settings Legacy4J has for the HUD
+now work and save to `config/legacy/hud.json`: HUD Size (1–3, `getHUDScale`
+1×/1.5×/2×), HUD Opacity (0–100%, default 80%) and a new Interface Distance row
+(0–100%, default 100%), each stepped by click or Enter. The moved layers are drawn
+at `getHUDOpacity`: at 80% or less the HUD holds 0.8 for 3.6 s after the hotbar
+selection changes, then fades to the setting. The mount's hearts
+(`draw_mount_hud`) move with the rows; the jump bar is part of the contextual
+layer already. The effect icons take `renderGuiEffects`' places (24 apart from
+`width - 55`, rows at 18 and 42) through the same mixin route, and boss bars
+start at `12 + 16 × distance` through `customize_boss_event_progress`. The item
+name moves with its own stock line (59 up), so it stays above the armor row at
+every size.
+
+Tested through the MCP: sizes 3 → 1 wrap, 30% and 40% opacity (loaded from and
+saved to the config file), the 0.8 hold after a slot change, 50% distance, a
+tamed horse's hearts, Speed/Night Vision/Slowness icons, a `/bossbar`, and the
+item name over the armor row at size 3. Not done: Legacy4J's SD/FHD UI modes, its
+own boss-bar and effect-panel art (API 01), and its in-game control tooltips,
+which need Horizon's input glyphs (API 06, horizon-rust/horizon#18396, open).
+A newly given effect's fly-in animation passes through the icon remap and can
+show away from the icons for a moment. Not tested: a controller, or
+hunger/poison/absorption rows.
+
+Container screens (chest, furnace family, brewing, anvil, trading…) stay stock:
+Legacy4J moves their slots, and the pinned API still can't move live slots or
+their hitboxes (API 07, horizon-rust/horizon#18397, open). The checklist marks
+them `[!]`.
+
+## Legacy pause menu (2026-11-21)
+
+`src/pause_menu.rs` replaces the stock pause screen's drawing and buttons with
+Legacy4J's column (`PauseScreenMixin`): 225×20 buttons, 5 apart, from
+`width / 2 - 112`, `height / 3 + 5`. Resume Game closes the screen as Escape
+does (queued to `client_tick_pre`, which runs while paused). Exit Game opens a
+confirmation (Cancel / Exit Game, `legacy.menu.server_exit_message`) and then
+calls `disconnect(None)`, which leaves as the stock Disconnect does and saves a
+single-player world first. Help & Options, Leaderboards, Advancements and Save
+Game are drawn disabled: `mod_screen_open` refuses while another screen is open
+and the pinned API opens no stats, advancements or save screen. Every click on
+the pause screen is consumed, and Tab/Left/Right are swallowed, so an undrawn
+stock button can't run. The controller menu mixins also route the gamepad to
+the Legacy menu on `Screen::Paused`.
+
+Tested on Windows, Nightly 5ef7734, a single-player world started from the
+launcher's Worlds → Play (the Legacy title has no world list yet, APIs 02–03):
+the column draws as in `gui-pause-menu.png`; Resume Game returns to the game;
+arrow keys move focus between Resume Game and Exit Game only and Enter
+activates; Exit Game → Cancel returns to the list; Exit Game → Exit Game
+lands on the title screen, and reopening the world from the launcher found it
+saved where it was left. Not tested: a gamepad and a multiplayer server. 28
+local tests pass.
+
+## Previous target
+
 Target: Minecraft 26.3, Horizon `0b14f8a`, Mod API 0.2.
 Gameplay/census validation build: `native-0b14f8a-b13f98955780`.
 Native settings adapter validation build: `native-0b14f8a-21f10fddf2f7`.

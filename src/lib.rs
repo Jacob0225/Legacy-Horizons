@@ -22,8 +22,10 @@ mod controller;
 mod credits;
 #[cfg(test)]
 mod flight_math;
+mod hud;
 mod interface;
 mod mobcaps;
+mod pause_menu;
 mod play_menu;
 #[cfg(test)]
 #[allow(dead_code)]
@@ -32,6 +34,12 @@ mod potion_math;
 static QUIT_REQUESTED: AtomicBool = AtomicBool::new(false);
 
 pub use client_options::take as take_client_option_change;
+
+pub use hud::{
+    alpha as legacy_hud_alpha, begin as legacy_hud_begin, effect_point as legacy_hud_effect_point,
+    end as legacy_hud_end, fade as legacy_hud_fade, lift as legacy_hud_lift,
+    point as legacy_hud_point,
+};
 
 /// Consumed by the native event-loop mixin; follows Horizon's normal shutdown path.
 pub fn take_quit_request() -> bool {
@@ -201,7 +209,7 @@ const GRAPHICS_OPTIONS: [&str; 4] = [
     "Legacy Gamma: 50%",
     "Graphics Preset: Default",
 ];
-const USER_INTERFACE_OPTIONS: [&str; 12] = [
+const USER_INTERFACE_OPTIONS: [&str; 13] = [
     "Display HUD: ON",
     "Display Hand: ON",
     "Display Game Messages: ON",
@@ -213,6 +221,7 @@ const USER_INTERFACE_OPTIONS: [&str; 12] = [
     "Online IDs: ON",
     "Classic Crafting: ON",
     "HUD Size: Default",
+    "Interface Distance: 100%",
     "Advanced Options",
 ];
 const RESET_SETTINGS_BUTTONS: [&str; 2] = ["Cancel", "Reset to Defaults"];
@@ -394,6 +403,7 @@ pub struct LegacyHorizon {
     audio: audio::Options,
     interface: interface::Options,
     mobcaps: mobcaps::Policy,
+    pause: pause_menu::PauseMenu,
 }
 
 fn menu_button_rects<const N: usize>(size: [f32; 2]) -> [[f32; 4]; N] {
@@ -750,7 +760,8 @@ fn draw_option_page(
         let enabled = (page == PAGE_AUDIO && index >= 2)
             || (page == PAGE_CONTROLLER && index == 3)
             || vanilla_bool_setting(host, page, index).is_some()
-            || interface_setting(page, index).is_some();
+            || interface_setting(page, index).is_some()
+            || (page == PAGE_USER_INTERFACE && hud::label(index).is_some());
         let _ = event
             .draw
             .widget_button(rect, &Text::literal(label), enabled, highlighted);
@@ -823,6 +834,7 @@ fn option_label(
         );
     }
     let value = match (page, index) {
+        (PAGE_USER_INTERFACE, row) if hud::label(row).is_some() => hud::label(row),
         (PAGE_CONTROLLER, 3) => Some(on_off(controller::inverted_look()).into()),
         (PAGE_CONTROLLER, 5) => Some("25%".into()),
         (PAGE_CONTROLLER, 6) => Some("34%".into()),
@@ -1655,6 +1667,28 @@ impl Hooks for LegacyHorizon {
         self.mobcaps.clear();
         controller::set_server(false);
     }
+    fn customize_boss_event_progress(
+        &self,
+        _: &dyn ClientHost,
+        event: &mut mod_api::CustomizeBossEventProgressEvent<'_>,
+    ) -> Flow {
+        event.y += hud::boss_bar_drop();
+        Flow::Continue
+    }
+
+    fn customize_chat_overlay(
+        &self,
+        _: &mut dyn ClientHost,
+        event: &mut mod_api::CustomizeChatOverlayEvent,
+    ) {
+        // The open chat's input box stays put, so its lines do too.
+        if !event.focused {
+            let [x, y] = hud::chat_offset();
+            event.x += x;
+            event.y += y;
+        }
+    }
+
     fn render_gui_pre(&self, _: &dyn ClientHost, _: &mut mod_api::RenderGuiPreEvent) -> Flow {
         if self.interface.enabled(interface::Setting::Hud) {
             Flow::Continue
@@ -1694,8 +1728,18 @@ impl Hooks for LegacyHorizon {
     }
 
     fn client_tick_pre(&self, host: &mut dyn ClientHost, _: &mut ClientTickPreEvent) {
+        self.pause.tick(host);
+        match host.observed_screen_id() {
+            None => {
+                self.pause.reset();
+                controller::set_title_active(false);
+            }
+            Some(screen) if screen.id != pause_menu::SCREEN => self.pause.reset(),
+            Some(_) => {}
+        }
         self.audio.sync(host);
         self.interface.sync(host);
+        hud::sync(host);
         let request = self.crafting_request.swap(0, Ordering::Relaxed);
         if request == 0 {
             return;
@@ -1793,9 +1837,9 @@ impl Hooks for LegacyHorizon {
     }
 
     fn screen_render_pre(&self, _: &dyn ClientHost, event: &mut ScreenRenderPreEvent<'_>) -> Flow {
-        if event.screen.id == TITLE_SCREEN {
-            // The title's normal drawing is replaced, then screen_render_post
-            // paints the Legacy4J title. Toasts remain above it as intended.
+        if event.screen.id == TITLE_SCREEN || event.screen.id == pause_menu::SCREEN {
+            // The title's and the pause menu's normal drawing is replaced, then
+            // screen_render_post paints Legacy4J's. Toasts remain above it as intended.
             Flow::Cancel
         } else {
             Flow::Continue
@@ -1803,8 +1847,10 @@ impl Hooks for LegacyHorizon {
     }
 
     fn screen_render_post(&self, host: &dyn ClientHost, event: &mut ScreenRenderPostEvent<'_>) {
-        controller::set_title_active(event.screen.id == TITLE_SCREEN);
-        if event.screen.id == TITLE_SCREEN {
+        controller::set_title_active(
+            event.screen.id == TITLE_SCREEN || event.screen.id == pause_menu::SCREEN,
+        );
+        if event.screen.id == TITLE_SCREEN || event.screen.id == pause_menu::SCREEN {
             while let Some(key) = controller::take_menu_key() {
                 let mut input = ScreenKeyPressedPreEvent {
                     screen: event.screen,
@@ -1818,6 +1864,7 @@ impl Hooks for LegacyHorizon {
         }
         self.audio.sync(host);
         self.interface.sync(host);
+        hud::sync(host);
         if event.screen.id == TITLE_SCREEN {
             if self.page.load(Ordering::Relaxed) == PAGE_CREDITS_ROLL {
                 credits::draw(
@@ -1846,6 +1893,8 @@ impl Hooks for LegacyHorizon {
                     .draw
                     .text("< Back", [16.0, size[1] - 18.0], 0xFFFF_FFFF, true);
             }
+        } else if event.screen.id == pause_menu::SCREEN {
+            self.pause.draw(host, event);
         } else if event.screen.id == "inventory" && event.screen.menu == Some("minecraft:crafting")
         {
             draw_crafting_menu(
@@ -1864,6 +1913,9 @@ impl Hooks for LegacyHorizon {
         host: &dyn ClientHost,
         event: &mut ScreenMouseButtonPressedPreEvent<'_>,
     ) -> Flow {
+        if event.screen.id == pause_menu::SCREEN {
+            return self.pause.mouse_pressed(host, event);
+        }
         if event.button != 0 {
             return Flow::Continue;
         }
@@ -1970,6 +2022,9 @@ impl Hooks for LegacyHorizon {
             }
             if let Some(setting) = interface_setting(page, index) {
                 self.interface.toggle(setting);
+            }
+            if page == PAGE_USER_INTERFACE {
+                hud::step(index);
             }
             if page == PAGE_CONTROLLER && index == 3 {
                 controller::request_invert_look();
@@ -2087,6 +2142,9 @@ impl Hooks for LegacyHorizon {
         host: &dyn ClientHost,
         event: &mut ScreenKeyPressedPreEvent<'_>,
     ) -> Flow {
+        if event.screen.id == pause_menu::SCREEN {
+            return self.pause.key_pressed(host, event);
+        }
         if event.screen.id == "inventory" && !crafting_browser_fits(event.screen.rect[0]) {
             return Flow::Continue;
         }
@@ -2221,6 +2279,10 @@ impl Hooks for LegacyHorizon {
                 }
                 if let Some(setting) = interface_setting(page, current) {
                     self.interface.toggle(setting);
+                    play_button_sound(host);
+                    return Flow::Cancel;
+                }
+                if page == PAGE_USER_INTERFACE && hud::step(current) {
                     play_button_sound(host);
                     return Flow::Cancel;
                 }

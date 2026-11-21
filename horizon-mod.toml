@@ -9,7 +9,7 @@ capabilities = ["registries"]
 
 [native]
 game = "26.3"
-horizon = "0b14f8acfd97fa2c750e42795249dcc981178ca4"
+horizon = "5ef7734fdd854add5efd6817178be3c988d8d050"
 mixins = "e59da9094f0c2fdda6c627fe9eff22dec6a906f0"
 
 [[native.mixin]]
@@ -56,3 +56,149 @@ cancellable = true
 helper = "src/mixins/controller_menu_step.rs"
 bindings = [{ name = "game", ty = "&Game<'_>", value = "&*self" }, { name = "button", ty = "Button", value = "button" }]
 
+[[native.mixin]]
+id = "legacy_hud_hotbar_begin"
+target = "horizon_client::game::Game<'_>::hud_layers"
+kind = "BEFORE_CALL"
+selector = "self.gui_layer"
+require = 15
+ordinal = 1
+helper = "src/mixins/hud_begin.rs"
+bindings = [{ name = "batch", ty = "&HudBatch", value = "$local_ref:batch:0" }]
+
+[[native.mixin]]
+id = "legacy_hud_hotbar_end"
+target = "horizon_client::game::Game<'_>::hud_layers"
+kind = "AFTER_CALL"
+result = "Option<()>"
+selector = "self.gui_layer"
+require = 15
+ordinal = 1
+helper = "src/mixins/hud_end.rs"
+bindings = [{ name = "game", ty = "&Game<'_>", value = "&*self" }, { name = "batch", ty = "&mut HudBatch", value = "$local_mut:batch:0" }]
+
+[[native.mixin]]
+id = "legacy_hud_health_begin"
+target = "horizon_client::game::Game<'_>::hud_layers"
+kind = "BEFORE_CALL"
+selector = "self.gui_layer"
+require = 15
+ordinal = 4
+helper = "src/mixins/hud_begin.rs"
+bindings = [{ name = "batch", ty = "&HudBatch", value = "$local_ref:batch:0" }]
+
+[[native.mixin]]
+id = "legacy_hud_health_end"
+target = "horizon_client::game::Game<'_>::hud_layers"
+kind = "AFTER_CALL"
+result = "Option<()>"
+selector = "self.gui_layer"
+require = 15
+ordinal = 4
+helper = "src/mixins/hud_end.rs"
+bindings = [{ name = "game", ty = "&Game<'_>", value = "&*self" }, { name = "batch", ty = "&mut HudBatch", value = "$local_mut:batch:0" }]
+
+[[native.mixin]]
+id = "legacy_hud_experience_begin"
+target = "horizon_client::game::Game<'_>::hud_layers"
+kind = "BEFORE_CALL"
+selector = "self.gui_layer"
+require = 15
+ordinal = 5
+helper = "src/mixins/hud_begin.rs"
+bindings = [{ name = "batch", ty = "&HudBatch", value = "$local_ref:batch:0" }]
+
+[[native.mixin]]
+id = "legacy_hud_experience_end"
+target = "horizon_client::game::Game<'_>::hud_layers"
+kind = "AFTER_CALL"
+result = "Option<()>"
+selector = "self.gui_layer"
+require = 15
+ordinal = 5
+helper = "src/mixins/hud_end.rs"
+bindings = [{ name = "game", ty = "&Game<'_>", value = "&*self" }, { name = "batch", ty = "&mut HudBatch", value = "$local_mut:batch:0" }]
+
+[[native.mixin]]
+id = "legacy_hud_item_name_begin"
+target = "horizon_client::game::Game<'_>::hud_layers"
+kind = "BEFORE_CALL"
+selector = "self.gui_layer"
+require = 15
+ordinal = 6
+helper = "src/mixins/hud_begin.rs"
+bindings = [{ name = "batch", ty = "&HudBatch", value = "$local_ref:batch:0" }]
+
+[[native.mixin]]
+id = "legacy_hud_item_name_end"
+target = "horizon_client::game::Game<'_>::hud_layers"
+kind = "AFTER_CALL"
+result = "Option<()>"
+selector = "self.gui_layer"
+require = 15
+ordinal = 6
+helper = "src/mixins/hud_lift.rs"
+bindings = [{ name = "batch", ty = "&mut HudBatch", value = "$local_mut:batch:0" }]
+
+[[native.mixin]]
+id = "legacy_hud_action_bar_begin"
+target = "horizon_client::game::Game<'_>::hud_layers"
+kind = "BEFORE_CALL"
+selector = "self.gui_layer"
+require = 15
+ordinal = 8
+helper = "src/mixins/hud_begin.rs"
+bindings = [{ name = "batch", ty = "&HudBatch", value = "$local_ref:batch:0" }]
+
+[[native.mixin]]
+id = "legacy_hud_action_bar_end"
+target = "horizon_client::game::Game<'_>::hud_layers"
+kind = "AFTER_CALL"
+result = "Option<()>"
+selector = "self.gui_layer"
+require = 15
+ordinal = 8
+helper = "src/mixins/hud_lift.rs"
+bindings = [{ name = "batch", ty = "&mut HudBatch", value = "$local_mut:batch:0" }]
+
+[[native.mixin]]
+id = "legacy_hud_effects_begin"
+target = "horizon_client::game::Game<'_>::hud_layers"
+kind = "BEFORE_CALL"
+selector = "self.gui_layer"
+require = 15
+ordinal = 2
+helper = "src/mixins/hud_begin.rs"
+bindings = [{ name = "batch", ty = "&HudBatch", value = "$local_ref:batch:0" }]
+
+[[native.mixin]]
+id = "legacy_hud_effects_end"
+target = "horizon_client::game::Game<'_>::hud_layers"
+kind = "AFTER_CALL"
+result = "Option<()>"
+selector = "self.gui_layer"
+require = 15
+ordinal = 2
+helper = "src/mixins/hud_effects.rs"
+bindings = [{ name = "game", ty = "&Game<'_>", value = "&*self" }, { name = "batch", ty = "&mut HudBatch", value = "$local_mut:batch:0" }]
+
+[[native.mixin]]
+id = "legacy_hud_mount_begin"
+target = "horizon_client::game::Game<'_>::hud_layers"
+kind = "BEFORE_CALL"
+selector = "self.draw_mount_hud"
+require = 1
+ordinal = 0
+helper = "src/mixins/hud_begin.rs"
+bindings = [{ name = "batch", ty = "&HudBatch", value = "$local_ref:batch:0" }]
+
+[[native.mixin]]
+id = "legacy_hud_mount_end"
+target = "horizon_client::game::Game<'_>::hud_layers"
+kind = "AFTER_CALL"
+result = "i32"
+selector = "self.draw_mount_hud"
+require = 1
+ordinal = 0
+helper = "src/mixins/hud_end.rs"
+bindings = [{ name = "game", ty = "&Game<'_>", value = "&*self" }, { name = "batch", ty = "&mut HudBatch", value = "$local_mut:batch:0" }]
