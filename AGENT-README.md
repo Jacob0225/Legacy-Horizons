@@ -33,6 +33,10 @@ in the failed translation or a Horizon engine checkout.
 1. Inspect `git status` and applicable local instructions. Preserve unrelated
    edits/deletions. Stage only the work you performed; do not stage everything.
 2. Read `CONTRIBUTING.md`, `GAMEPLAY-STATUS.md` and the relevant local issue.
+   Review the [README progress checklist](README.md#port-progress-checklist).
+   Update its statuses after every implementation session. Only mark `[x]`
+   after the feature works in-game and has been tested; written code or a
+   successful build alone is not completion. Prefer Horizon's modding API.
 3. Locate the corresponding code/assets in the sibling `Legacy4j/` source
    and the supplied `references/` images. The workspace `doc/` folder and
    the exact pinned SDK docs are useful API references. Paths vary on another

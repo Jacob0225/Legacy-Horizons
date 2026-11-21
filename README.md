@@ -9,8 +9,10 @@ the owner's visual requirements, source research, native API workflow,
 Horizon MCP checks, screenshot evidence and GitHub publishing conventions.
 The [issues README](github%20issues/README.md) explains duplicate checks,
 report formatting, AI attribution, follow-ups and the existing issue numbers.
-Use [GAMEPLAY-STATUS.md](GAMEPLAY-STATUS.md) for what is actually implemented
-and tested; do not infer completion from the presence of a menu or experiment.
+Use the [port progress checklist](#port-progress-checklist) to track work and
+[GAMEPLAY-STATUS.md](GAMEPLAY-STATUS.md) for the recorded implementation/test
+evidence. Update them after each implementation session; do not infer
+completion from the presence of a menu or experiment.
 
 Settings and other button-list pages have a clear background over the
 panorama: no white/gray card, border or dark backing behind the button group.
@@ -163,6 +165,327 @@ particular, the crafting browser renders and selects recipes,
 but it stays beside Horizon's stock inventory slots until issue 7's slot-layout
 API exists; moving those live slots into Legacy4J's 348x215 crafting panel is
 not safe with the current API.
+
+## Port progress checklist
+
+### Progress tracking rules
+
+- `[ ]` Not started
+- `[~]` Work in progress
+- `[x]` Completed and tested
+- `[!]` Blocked by missing APIs or technical limitations
+- `[?]` Needs investigation
+
+Update this checklist after every implementation session.
+
+Do not mark a feature completed until it works in-game and has been tested.
+Do not mark a feature completed simply because code has been written.
+
+Prefer implementing features through Horizon's modding API.
+
+The statuses below are based on the current implementation and recorded
+Horizon MCP evidence in [GAMEPLAY-STATUS.md](GAMEPLAY-STATUS.md). Existing
+stock Horizon behavior, static menu placeholders and disabled experiments do
+not count as completed Legacy4J ports. A completed subfeature does not mean
+the surrounding screen has full visual parity. Partial implementations stay
+`[~]` even when one part needs an API change. `[!]` records a known boundary
+on the pinned target, not a claim that every possible approach is impossible.
+API numbers refer to the local [issue ledger](github%20issues/README.md#existing-report-ledger).
+Items without recorded implementation are left `[ ]`; uncertain compatibility
+or verification is `[?]`. Preserve the owner's clear button-list backgrounds
+and table-only crafting scope while working through this list.
+
+### 1. Main Menu and Navigation
+
+- [~] Legacy Console-style main menu — Navigation/layout are partial; artwork and some actions remain unfinished.
+- [~] Legacy title screen layout — Source button geometry is implemented; full visual parity is pending.
+- [~] Legacy menu background — Panorama/fallback drawing works; bundled Legacy artwork is blocked by API 01.
+- [!] Legacy button textures — Bundled texture lookup: API 01.
+- [ ] Legacy menu animations
+- [~] Legacy selection highlights — Native hover/focus works; exact Legacy highlight artwork is pending.
+- [~] Play Game menu — Load/Create/Join panel and navigation; world/server actions remain incomplete.
+- [!] Singleplayer world selection — Title-state/action surfaces: APIs 02–03.
+- [~] Multiplayer menu — Join tab scaffolding; connection/server flows are unfinished.
+- [~] Settings menu — Menu hierarchy and selected saved toggles work; many settings remain unfinished.
+- [~] Help & Options menu — Navigation works; skin and other destinations remain partial.
+- [x] How To Play menu — 43-entry index and article reader exercised in Horizon MCP; clear background.
+- [~] Change Skin menu — Clear button-list scaffolding; skin actions/preview are unfinished.
+- [ ] Mods menu
+- [ ] Patch/Update Notes menu
+- [x] Exit Game confirmation — Confirmed native graceful shutdown and successful client exit in Horizon MCP.
+- [~] Controller navigation across menus — Replacement title pages work; not all in-world menus are ported.
+- [!] Controller button prompts — Active input glyph drawing: API 06.
+- [~] Legacy-style confirmation dialogs — Exit flow works; reset and other actions remain incomplete.
+
+### 2. Pause Menu
+
+- [ ] Legacy pause menu layout
+- [ ] Resume Game button
+- [ ] Help & Options button
+- [ ] Settings access
+- [ ] Player list
+- [ ] Multiplayer options
+- [ ] Exit and Save functionality
+- [ ] Legacy pause screen background
+- [ ] Controller navigation
+
+### 3. HUD
+
+- [ ] Legacy HUD layout
+- [ ] Legacy hotbar positioning
+- [ ] HUD scaling
+- [ ] HUD opacity adjustment
+- [ ] HUD distance from screen bottom
+- [ ] Legacy health display
+- [ ] Legacy hunger display
+- [ ] Legacy armor display
+- [ ] Legacy experience bar
+- [ ] Legacy crosshair
+- [ ] Legacy item tooltips
+- [ ] Item name display
+- [!] Paper doll player preview — GUI player rendering: API 05.
+- [!] Paper doll animations — Depends on the missing GUI player-preview surface, API 05.
+- [ ] Auto-save indicator
+- [!] Controller action prompts — Active input glyph drawing: API 06.
+- [ ] Legacy-style status effects display
+
+### 4. Inventory
+
+- [!] Legacy survival inventory — Replacement live slot layout/hitboxes: API 07; stock inventory remains.
+- [ ] Legacy creative inventory
+- [ ] Legacy inventory textures
+- [!] Legacy inventory slot layout — Replacement live slot layout/hitboxes: API 07.
+- [ ] Legacy inventory navigation
+- [ ] Controller cursor movement
+- [ ] Controller item selection
+- [ ] Quick item transfer
+- [ ] Item swapping
+- [ ] Item splitting
+- [ ] Item dropping
+- [ ] Inventory tooltips
+- [ ] Creative inventory tabs
+- [ ] Creative item categories
+- [!] Inventory player preview — GUI player rendering: API 05.
+
+### 5. Crafting
+
+- [~] Legacy crafting interface — Working side browser, not the full source slot layout; API 07.
+- [~] Classic crafting menu — Stock grid plus side browser; no complete Legacy grid replacement.
+- [~] Recipe category tabs — Four tested live filters, not the complete source category/group system.
+- [x] Recipe selection — Pointer, wheel and keyboard selection tested in the current side browser.
+- [ ] Craftable recipe indicators
+- [ ] Uncraftable recipe indicators
+- [!] Automatic ingredient placement — place_recipe refused the open table: API 14.
+- [ ] Automatic crafting
+- [x] Recipe previews — Real result and ingredient previews observed in the side browser.
+- [ ] Recipe ingredient tooltips
+- [~] Crafting table interface — Browser is table-only; Legacy panel/slot replacement is unfinished.
+- [ ] Player inventory crafting — Intentionally left unchanged; do not apply the table layout to it.
+- [ ] Controller crafting navigation
+
+### 6. Container and Utility Screens
+
+- [ ] Chest interface
+- [ ] Large chest interface
+- [ ] Furnace interface
+- [ ] Blast furnace interface
+- [ ] Smoker interface
+- [ ] Brewing stand interface
+- [ ] Enchanting table interface
+- [ ] Anvil interface
+- [ ] Smithing table interface
+- [ ] Grindstone interface
+- [ ] Stonecutter interface
+- [ ] Loom interface
+- [ ] Cartography table interface
+- [ ] Beacon interface
+- [ ] Shulker box interface
+- [ ] Hopper interface
+- [ ] Dispenser interface
+- [ ] Dropper interface
+- [ ] Villager trading interface
+- [ ] Horse inventory interface
+
+### 7. Controller Support
+
+- [?] Gamepad detection — Uses Horizon detection; source-equivalent connection handling is not verified.
+- [?] Xbox controller support — Virtual positional-button tests exist; physical-device parity is not verified.
+- [?] PlayStation controller support — Physical-device/source parity is not verified.
+- [ ] Controller button mapping
+- [ ] Configurable controller bindings
+- [~] Analog movement — Axial curve/dead zone tested; broader movement cases remain.
+- [~] Analog camera movement — Dead zone/turn observed; exact live rate, scope and polling parity remain.
+- [~] Camera sensitivity — Curve uses the native setting; the custom sensitivity slider is unfinished.
+- [~] Controller deadzone settings — Source constants are used/displayed; editable controls are unfinished.
+- [ ] Controller inventory navigation
+- [~] Controller menu navigation — D-pad/stick/confirm/back exercised on replacement title pages.
+- [?] Controller vibration — No Legacy-specific haptic implementation/device verification recorded.
+- [!] Context-sensitive button prompts — Active input glyph drawing: API 06.
+- [ ] Controller hotbar navigation
+- [ ] Controller crafting controls
+- [?] Controller disconnect handling — Legacy-equivalent behavior has not been verified.
+- [?] Keyboard and controller switching — Full source-equivalent handoff behavior has not been verified.
+
+### 8. World Creation
+
+- [~] Legacy world creation screen — Create tab is scaffolding; creation controls/actions are not implemented.
+- [ ] World naming
+- [ ] Game mode selection
+- [ ] Difficulty selection
+- [ ] World seed entry
+- [ ] World type selection
+- [ ] Superflat world customization
+- [ ] World generation options
+- [ ] Bonus chest option
+- [ ] Starting map option
+- [ ] Cheats/host privileges
+- [ ] Multiplayer world settings
+- [ ] Online game options
+- [ ] World templates
+- [ ] Tutorial world selection
+- [ ] Resource pack configuration
+
+### 9. World Management
+
+- [!] Legacy world selection screen — World/title state and actions: APIs 02–03.
+- [!] World preview information — World/title state surface: APIs 02–03.
+- [ ] World settings
+- [ ] World deletion
+- [ ] World duplication
+- [ ] World renaming
+- [~] World loading interface — Dimension/respawn transitions exist; initial world-load parity is unfinished.
+- [!] World saving interface — Closing world-save draw hook: API 11.
+- [ ] Save indicator
+- [ ] World-specific settings
+- [ ] World-specific resource packs
+
+### 10. Settings and Options
+
+- [~] Legacy settings layout — Clear button lists and scrolling work; exact source controls remain incomplete.
+- [~] Game options — Selected native and mod-owned toggles work; remaining rows are unfinished.
+- [~] Graphics options — Read-only/scaffold page; no complete source settings implementation.
+- [~] Audio options — Cave/cart switches and elytra sound policy work; music/master sliders remain.
+- [~] Controller options — Invert Look and Smooth Movement work; other controls remain unfinished.
+- [~] User interface options — HUD/hand/message switches work; scaling, opacity and other controls remain.
+- [~] Sensitivity settings — Live values are read; custom writable sliders remain unfinished.
+- [x] Invert camera settings — Mouse X/Y and controller Invert Look applied, saved and verified after restart.
+- [ ] HUD scaling settings
+- [ ] HUD opacity settings
+- [ ] Gamma settings
+- [ ] Terrain fog settings
+- [ ] Difficulty settings
+- [ ] Accessibility settings
+- [ ] Resource pack settings
+- [ ] Language settings
+
+### 11. Rendering and Visual Effects
+
+- [~] Legacy GUI rendering — Replacement title/help/settings and crafting browser; full parity is unfinished.
+- [ ] Legacy GUI lighting
+- [?] Legacy font rendering — Source-equivalent font/resource behavior needs investigation.
+- [!] Legacy UI textures — Bundled GUI texture lookup: API 01.
+- [~] Legacy screen transitions — Dimension/respawn drawings exist; other transitions and cause handling remain.
+- [ ] Legacy menu animations
+- [ ] Legacy gamma shader
+- [ ] Terrain fog behavior
+- [~] Legacy item rendering in menus — Live recipe item drawing works; full source appearance is not verified.
+- [!] Legacy entity previews — GUI entity/player rendering: API 05.
+- [!] Legacy player previews — GUI player rendering: API 05.
+- [ ] Legacy tooltip rendering
+
+### 12. Gameplay Mechanics
+
+- [!] Legacy creative flight behavior — Inner travel/speed/collision targets unavailable on the pinned build: API 15.
+- [!] Legacy elytra momentum — Inner movement integration is unavailable; API 15, with camera roll separately API 16.
+- [~] Legacy mob-cap behavior — Opt-in natural quotas only; breeding/manual/despawn/scheduling remain.
+- [!] Legacy potion-related tweaks — Vanilla-cauldron saved block-entity ownership rejected: API 17; experiment disabled.
+- [~] Legacy controller movement behavior — Source curves are partial; full gameplay mappings/interactions remain.
+- [ ] Legacy interaction behavior
+- [ ] Legacy inventory interaction behavior
+
+### 13. Skins and Player Customization
+
+- [~] Change Skin interface — Clear menu scaffolding only; not a working skin-selection system.
+- [!] Skin preview — GUI skin/player preview: API 05.
+- [ ] Skin selection
+- [ ] Skin categories
+- [!] Player model preview — GUI player preview: API 05.
+- [!] Player model rotation — Depends on the missing player-preview renderer, API 05.
+- [?] Skin compatibility with Java Edition — No Legacy skin-port compatibility verification recorded.
+- [ ] Controller skin selection
+
+### 14. Help and Tutorials
+
+- [x] How To Play interface — Clear index/article interface exercised in Horizon MCP.
+- [x] Tutorial categories — Valid 43-entry How To Play index implemented and tested.
+- [~] Tutorial pages — Source JSON reader/translation/wrapping works; not every article has a complete live audit.
+- [x] Tutorial navigation — Index and article selection/back/scroll behavior tested with mouse and keyboard.
+- [!] Controller instruction prompts — Active input glyph drawing: API 06.
+- [ ] Tutorial world support
+- [ ] Advanced gameplay hints
+- [ ] Context-sensitive hints
+
+### 15. Resource Packs and Additional Features
+
+- [ ] Resource Albums
+- [ ] Global resource packs
+- [ ] World-specific resource packs
+- [!] Legacy texture compatibility — Bundled GUI textures cannot yet be drawn through the tested path: API 01.
+- [?] Legacy font resources — Bundled resources alone do not prove runtime source parity.
+- [~] Legacy sound resources — Partial sound behavior/filtering; full Legacy audio/resource parity is unfinished.
+- [~] Legacy UI assets — Bundled material exists; runtime artwork parity is blocked in part by API 01.
+- [ ] Mods screen integration
+- [ ] Patch notes interface
+- [?] World Host integration — Requirements and Horizon counterpart need investigation.
+
+### 16. Multiplayer
+
+- [~] Legacy multiplayer interface — Join-tab scaffolding only; not a complete connection flow.
+- [ ] Multiplayer world options
+- [ ] Player list interface
+- [ ] Multiplayer pause menu
+- [ ] Online game settings
+- [ ] Controller-friendly multiplayer navigation
+- [ ] Multiplayer compatibility testing
+
+### 17. Horizon Integration
+
+- [x] Horizon mod manifest — Pinned native manifest built and installed successfully.
+- [x] Horizon mod initialization — Native package launched and its hooks/registrations exercised in game.
+- [~] Legacy4J resource loading — Help/credits data loads; GUI artwork remains incomplete.
+- [~] Legacy4J configuration storage — Implemented interface/audio/native options persist; not every source setting is ported.
+- [~] Screen replacement API support — Draw-hook replacements work; opening owned title screens is API 02.
+- [~] Custom GUI rendering — Several pages render; textures/previews/layouts remain incomplete.
+- [~] GUI input handling — Title and browser interactions tested; full screen coverage is unfinished.
+- [~] Controller input integration — Native title and movement adapters tested; broader source input remains.
+- [~] Inventory screen integration — Stock container context is used; Legacy replacement slots require API 07.
+- [~] Crafting screen integration — Table browser works; placement/layout remain APIs 14/07.
+- [!] World creation screen integration — Public title/world actions are missing: APIs 02–03; creation port is unfinished.
+- [~] HUD rendering integration — HUD/hand/outline switches work; no complete Legacy HUD layout.
+- [~] Gameplay hooks integration — Natural quota subset and local controls exist; full gameplay port is unfinished.
+- [?] Renderer extension support — Further renderer capabilities need investigation; not a mandate to modify core.
+- [?] Compatibility with Horizon updates — Only the pinned build has recorded native validation.
+- [~] Avoid unnecessary modifications to Horizon core — Ongoing constraint; the port does not ship an engine fork.
+- [~] Automated compatibility tests — 23 local tests exist; no complete cross-version/feature compatibility matrix.
+- [~] In-game feature verification — Recorded MCP checks cover implemented slices, not the entire checklist.
+
+### 18. Final Verification
+
+- [~] Main menus match Legacy4J — Geometry/navigation slices verified; artwork/actions are incomplete.
+- [ ] Pause menu matches Legacy4J
+- [ ] HUD matches Legacy4J
+- [ ] Inventory matches Legacy4J
+- [~] Crafting matches Legacy4J — Browser works; source slot layout and automatic placement are unfinished.
+- [~] Controller behavior matches Legacy4J — Curves/title navigation verified only in part.
+- [ ] World creation matches Legacy4J
+- [~] Settings match Legacy4J — Selected persisted toggles and clear lists; many controls remain unfinished.
+- [~] Rendering matches Legacy4J where supported — Progress captures exist; no full visual parity audit.
+- [~] Gameplay modifications work — Natural quota/controller/audio subsets; requested flight/potion work is not enabled.
+- [?] Multiplayer works — No complete port-specific multiplayer verification recorded.
+- [?] No critical crashes — Successful test runs are not a complete release audit; rejected experiments stay disabled.
+- [?] No major visual regressions — Selected menus checked; full-screen/scale regression audit remains.
+- [~] Works on supported Horizon versions — Pinned nightly launches; full feature coverage is incomplete.
+- [~] All implemented features documented — Status/evidence docs exist; keep them and this checklist current after each session.
 
 ## Development
 
